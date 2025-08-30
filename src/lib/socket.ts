@@ -7,19 +7,23 @@ class SocketService {
   connect(token: string) {
     this.token = token;
 
-    this.socket = io(import.meta.env.VITE_API_URL || "http://localhost:5000", {
-      auth: {
-        token,
-      },
-      transports: ["websocket", "polling"],
-    });
+    this.socket = io(
+      import.meta.env.VITE_API_URL?.replace("/api", "") ||
+        "http://localhost:5000",
+      {
+        auth: {
+          token,
+        },
+        transports: ["websocket", "polling"],
+      }
+    );
 
     this.socket.on("connect", () => {
-      // Connected to server
+      console.log("✅ Socket connected:", this.socket?.id);
     });
 
     this.socket.on("disconnect", () => {
-      // Disconnected from server
+      console.log("❌ Socket disconnected");
     });
 
     this.socket.on("connect_error", (error) => {
@@ -64,6 +68,7 @@ class SocketService {
 
   // Typing indicators
   setTyping(conversationId: string, isTyping: boolean) {
+    console.log("🔄 Sending typing:", { conversationId, isTyping });
     this.socket?.emit("typing", { conversationId, isTyping });
   }
 
@@ -113,6 +118,28 @@ class SocketService {
 
   onError(callback: (error: { message: string }) => void) {
     this.socket?.on("error", callback);
+  }
+
+  // Profile update listeners
+  onAvatarUpdated(
+    callback: (data: {
+      userId: string;
+      username: string;
+      avatar: string;
+    }) => void
+  ) {
+    this.socket?.on("avatarUpdated", callback);
+  }
+
+  onProfileUpdated(
+    callback: (data: {
+      userId: string;
+      username: string;
+      email: string;
+      avatar: string;
+    }) => void
+  ) {
+    this.socket?.on("profileUpdated", callback);
   }
 
   // Remove listeners

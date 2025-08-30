@@ -18,7 +18,8 @@ interface ProfileForm {
 export default function UserProfile({ isOpen, onClose }: UserProfileProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const { user, login } = useAuthStore();
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+  const { user, login, updateUser } = useAuthStore();
 
   const {
     register,
@@ -86,6 +87,7 @@ export default function UserProfile({ isOpen, onClose }: UserProfileProps) {
       return;
     }
 
+    setIsUploadingAvatar(true);
     try {
       const formData = new FormData();
       formData.append("avatar", file);
@@ -96,12 +98,14 @@ export default function UserProfile({ isOpen, onClose }: UserProfileProps) {
         },
       });
 
-      const updatedUser = { ...user, avatar: response.data.avatarUrl };
-      login(localStorage.getItem("token") || "", updatedUser);
+      updateUser({ avatar: response.data.avatarUrl });
 
       toast.success("Avatar updated successfully");
-    } catch {
+    } catch (error) {
+      console.error("Avatar upload error:", error);
       toast.error("Failed to upload avatar");
+    } finally {
+      setIsUploadingAvatar(false);
     }
 
     // Reset file input
@@ -144,13 +148,22 @@ export default function UserProfile({ isOpen, onClose }: UserProfileProps) {
                 )}
               </div>
 
-              <label className="absolute -bottom-2 -right-2 p-2 bg-primary text-white rounded-full cursor-pointer hover:bg-primary/90 transition-colors">
-                <Camera className="w-4 h-4" />
+              <label
+                className={`absolute -bottom-2 -right-2 p-2 bg-primary text-white rounded-full cursor-pointer hover:bg-primary/90 transition-colors ${
+                  isUploadingAvatar ? "opacity-50 cursor-not-allowed" : ""
+                }`}
+              >
+                {isUploadingAvatar ? (
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                ) : (
+                  <Camera className="w-4 h-4" />
+                )}
                 <input
                   title="image-upload"
                   type="file"
                   accept="image/*"
                   onChange={handleAvatarUpload}
+                  disabled={isUploadingAvatar}
                   className="hidden"
                 />
               </label>

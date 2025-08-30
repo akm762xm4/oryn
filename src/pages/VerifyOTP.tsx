@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
-import { MessageCircle, Moon, Sun, ArrowLeft } from "lucide-react";
+import { Moon, Sun, ArrowLeft } from "lucide-react";
 import toast from "react-hot-toast";
 import api from "../lib/api";
 import { useAuthStore } from "../stores/authStore";
@@ -104,36 +104,43 @@ export default function VerifyOTP() {
   };
 
   return (
-    <div className="auth-background flex items-center justify-center p-4">
-      <div className="w-full max-w-md bg-background/90 backdrop-blur-sm rounded-2xl p-8 shadow-2xl border border-white/10">
+    <div className="auth-background flex items-center justify-center p-4 min-h-screen">
+      <div className="w-full max-w-md bg-background/90 backdrop-blur-sm rounded-2xl p-6 sm:p-8 shadow-2xl border border-white/10 mx-auto">
         {/* Header */}
-        <div className="text-center mb-8">
+        <div className="text-center mb-6 sm:mb-8">
           <div className="flex items-center justify-center mb-4">
             <div className="bg-primary p-3 rounded-full">
-              <MessageCircle className="w-8 h-8 text-white" />
+              <span className="text-white font-bold text-2xl sm:text-3xl">
+                O
+              </span>
             </div>
           </div>
-          <h1 className="text-2xl font-bold text-foreground">
+          <h1 className="text-xl sm:text-2xl font-bold text-foreground">
             Verify Your Email
           </h1>
-          <p className="text-muted-foreground mt-2">
+          <p className="text-sm sm:text-base text-muted-foreground mt-2">
             We've sent a verification code to
           </p>
-          <p className="text-foreground font-medium">{email}</p>
+          <p className="text-sm sm:text-base text-foreground font-medium break-all">
+            {email}
+          </p>
         </div>
 
         {/* Theme Toggle */}
-        <div className="flex justify-between items-center mb-6">
+        <div className="flex justify-between items-center mb-4 sm:mb-6">
           <button
-            title="submit"
+            type="button"
             onClick={() => navigate("/register")}
-            className="p-2 rounded-lg bg-muted hover:bg-muted/80 transition-colors"
+            className="p-2.5 sm:p-2 rounded-lg bg-muted hover:bg-muted/80 transition-colors touch-manipulation"
+            aria-label="Go back to register"
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
           <button
+            type="button"
             onClick={toggleTheme}
-            className="p-2 rounded-lg bg-muted hover:bg-muted/80 transition-colors"
+            className="p-2.5 sm:p-2 rounded-lg bg-muted hover:bg-muted/80 transition-colors touch-manipulation"
+            aria-label="Toggle theme"
           >
             {isDark ? (
               <Sun className="w-5 h-5" />
@@ -144,7 +151,10 @@ export default function VerifyOTP() {
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+        <form
+          onSubmit={handleSubmit(onSubmit)}
+          className="space-y-5 sm:space-y-6"
+        >
           <div>
             <label className="block text-sm font-medium text-foreground mb-2">
               Verification Code
@@ -158,9 +168,11 @@ export default function VerifyOTP() {
                   message: "Please enter a valid 6-digit code",
                 },
               })}
-              className="w-full px-4 py-3 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-center text-lg tracking-widest"
+              className="w-full px-4 py-4 sm:py-3 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-center text-xl sm:text-lg tracking-widest"
               placeholder="000000"
               maxLength={6}
+              inputMode="numeric"
+              autoComplete="one-time-code"
             />
             {errors.otp && (
               <p className="text-destructive text-sm mt-1">
@@ -172,19 +184,22 @@ export default function VerifyOTP() {
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full bg-primary text-white py-3 rounded-lg font-medium hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="w-full bg-primary text-white py-3.5 sm:py-3 rounded-lg font-medium hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors touch-manipulation text-base sm:text-sm"
           >
             {isLoading ? "Verifying..." : "Verify Email"}
           </button>
         </form>
 
         {/* Resend OTP */}
-        <div className="text-center mt-6">
-          <p className="text-muted-foreground mb-2">Didn't receive the code?</p>
+        <div className="text-center mt-5 sm:mt-6">
+          <p className="text-sm sm:text-base text-muted-foreground mb-2">
+            Didn't receive the code?
+          </p>
           <button
+            type="button"
             onClick={handleResendOTP}
             disabled={countdown > 0 || isResending}
-            className="text-primary hover:underline font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+            className="text-primary hover:underline font-medium disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation text-sm sm:text-base"
           >
             {isResending
               ? "Sending..."

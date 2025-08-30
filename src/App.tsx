@@ -76,6 +76,10 @@ function App() {
               element={isAuthenticated ? <Chat /> : <Navigate to="/login" />}
             />
             <Route
+              path="/chat/:conversationId"
+              element={isAuthenticated ? <Chat /> : <Navigate to="/login" />}
+            />
+            <Route
               path="/"
               element={<Navigate to={isAuthenticated ? "/chat" : "/login"} />}
             />

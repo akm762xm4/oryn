@@ -20,6 +20,20 @@ export const useAuthStore = create<AuthState>()(
         localStorage.removeItem("user");
         set({ token: null, user: null, isAuthenticated: false });
       },
+
+      updateUser: (updatedUser: Partial<User>) => {
+        set((state) => {
+          if (!state.user) return state;
+
+          const newUser = { ...state.user, ...updatedUser };
+          localStorage.setItem("user", JSON.stringify(newUser));
+
+          return {
+            ...state,
+            user: newUser,
+          };
+        });
+      },
     }),
     {
       name: "auth-storage",

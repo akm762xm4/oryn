@@ -43,6 +43,7 @@ export interface AuthState {
   isAuthenticated: boolean;
   login: (token: string, user: User) => void;
   logout: () => void;
+  updateUser: (updatedUser: Partial<User>) => void;
 }
 
 export interface ChatState {
@@ -64,4 +65,5 @@ export interface ChatState {
     username: string
   ) => void;
   removeUserTyping: (conversationId: string, userId: string) => void;
+  updateUserInMessages: (userId: string, updates: Partial<User>) => void;
 }

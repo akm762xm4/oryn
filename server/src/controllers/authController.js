@@ -1,6 +1,7 @@
 import jwt from "jsonwebtoken";
 import User from "../models/User.js";
 import { sendOTP } from "../utils/email.js";
+import cloudinary from "../config/cloudinary.js";
 
 const generateToken = (userId) => {
   return jwt.sign({ userId }, process.env.JWT_SECRET, { expiresIn: "7d" });
@@ -151,6 +152,117 @@ export const resendOTP = async (req, res) => {
 
     res.json({ message: "OTP sent successfully" });
   } catch (error) {
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
+export const updateProfile = async (req, res) => {
+  try {
+    const { username, email } = req.body;
+    const userId = req.user._id;
+
+    // Check if username or email already exists (excluding current user)
+    const existingUser = await User.findOne({
+      $and: [{ _id: { $ne: userId } }, { $or: [{ email }, { username }] }],
+    });
+
+    if (existingUser) {
+      return res.status(400).json({
+        message:
+          existingUser.email === email
+            ? "Email already exists"
+            : "Username already exists",
+      });
+    }
+
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      { username, email },
+      { new: true, runValidators: true }
+    ).select("-password");
+
+    // Emit real-time profile update to all connected clients
+    const io = req.app.get("io");
+    if (io) {
+      io.emit("profileUpdated", {
+        userId: userId.toString(),
+        username: updatedUser.username,
+        email: updatedUser.email,
+        avatar: updatedUser.avatar,
+      });
+    }
+
+    res.json({
+      message: "Profile updated successfully",
+      user: {
+        _id: updatedUser._id,
+        username: updatedUser.username,
+        email: updatedUser.email,
+        avatar: updatedUser.avatar,
+        isVerified: updatedUser.isVerified,
+      },
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
+export const uploadAvatar = async (req, res) => {
+  try {
+    const userId = req.user._id;
+
+    if (!req.file) {
+      return res.status(400).json({ message: "No file uploaded" });
+    }
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Delete old avatar from Cloudinary if it exists
+    if (user.avatar) {
+      try {
+        // Extract public_id from the Cloudinary URL
+        const urlParts = user.avatar.split("/");
+        const publicIdWithExtension = urlParts[urlParts.length - 1];
+        const publicId = `avatars/${publicIdWithExtension.split(".")[0]}`;
+        await cloudinary.uploader.destroy(publicId);
+      } catch (error) {
+        console.log("Error deleting old avatar:", error);
+      }
+    }
+
+    // Upload new avatar to Cloudinary
+    const result = await cloudinary.uploader.upload(req.file.path, {
+      folder: "avatars",
+      width: 200,
+      height: 200,
+      crop: "fill",
+      quality: "auto",
+      format: "webp",
+    });
+
+    // Update user avatar in database
+    user.avatar = result.secure_url;
+    await user.save();
+
+    // Emit real-time avatar update to all connected clients
+    const io = req.app.get("io");
+    if (io) {
+      io.emit("avatarUpdated", {
+        userId: userId.toString(),
+        username: user.username,
+        avatar: result.secure_url,
+      });
+    }
+
+    res.json({
+      message: "Avatar uploaded successfully",
+      avatarUrl: result.secure_url,
+    });
+  } catch (error) {
+    console.error("Avatar upload error:", error);
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };

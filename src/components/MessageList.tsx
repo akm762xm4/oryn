@@ -12,9 +12,11 @@ const MessageList = memo(function MessageList() {
   const [isLoading, setIsLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const [page, setPage] = useState(1);
+  const [isUserScrolling, setIsUserScrolling] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const isLoadingRef = useRef(false);
+  const scrollTimeoutRef = useRef<NodeJS.Timeout>();
 
   const { user } = useAuthStore();
   const { activeConversation, messages, setMessages, typingUsers } =
@@ -62,6 +64,10 @@ const MessageList = memo(function MessageList() {
       if (activeConversation) {
         socketService.leaveConversation(activeConversation._id);
       }
+      // Cleanup scroll timeout
+      if (scrollTimeoutRef.current) {
+        clearTimeout(scrollTimeoutRef.current);
+      }
     };
   }, [activeConversation, loadMessages]);
 
@@ -69,14 +75,62 @@ const MessageList = memo(function MessageList() {
     scrollToBottom();
   }, [messages]);
 
+  // Smooth scroll when typing indicator appears/disappears
+  useEffect(() => {
+    const typingInThisConv = getTypingUsersForConversation();
+    if (typingInThisConv.length > 0) {
+      // Small delay to ensure typing indicator is rendered before scrolling
+      setTimeout(() => {
+        scrollToBottom(true); // Force scroll for typing indicator
+      }, 150);
+    }
+  }, [typingUsers, activeConversation, user?._id]);
+
   const loadMoreMessages = useCallback(() => {
     if (hasMore && !isLoadingRef.current) {
       loadMessages(page + 1);
     }
   }, [hasMore, loadMessages, page]);
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  const scrollToBottom = (force = false) => {
+    if (messagesEndRef.current) {
+      // Check if user is near bottom (within 100px) or force scroll
+      const container = messagesContainerRef.current;
+      if (container && !force && !isUserScrolling) {
+        const { scrollTop, scrollHeight, clientHeight } = container;
+        const isNearBottom = scrollHeight - scrollTop - clientHeight < 100;
+
+        // Only auto-scroll if user is near bottom
+        if (!isNearBottom) return;
+      }
+
+      messagesEndRef.current.scrollIntoView({
+        behavior: "smooth",
+        block: "end",
+      });
+    }
+  };
+
+  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    const { scrollTop } = e.currentTarget;
+
+    // Load more messages when scrolled to top
+    if (scrollTop === 0 && hasMore) {
+      loadMoreMessages();
+    }
+
+    // Track user scrolling behavior
+    setIsUserScrolling(true);
+
+    // Clear existing timeout
+    if (scrollTimeoutRef.current) {
+      clearTimeout(scrollTimeoutRef.current);
+    }
+
+    // Reset scrolling state after user stops scrolling
+    scrollTimeoutRef.current = setTimeout(() => {
+      setIsUserScrolling(false);
+    }, 1000);
   };
 
   const formatDateSeparator = (date: Date) => {
@@ -118,12 +172,7 @@ const MessageList = memo(function MessageList() {
     <div
       ref={messagesContainerRef}
       className="flex-1 overflow-y-auto p-4 space-y-4"
-      onScroll={(e) => {
-        const { scrollTop } = e.currentTarget;
-        if (scrollTop === 0 && hasMore) {
-          loadMoreMessages();
-        }
-      }}
+      onScroll={handleScroll}
     >
       {/* Load more indicator */}
       {isLoading && page > 1 && (

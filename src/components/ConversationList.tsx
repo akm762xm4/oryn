@@ -1,4 +1,5 @@
 import { memo, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import { formatDistanceToNow } from "date-fns";
 import { useAuthStore } from "../stores/authStore";
 import { useChatStore } from "../stores/chatStore";
@@ -12,9 +13,24 @@ interface ConversationListProps {
 const ConversationList = memo(function ConversationList({
   conversations,
 }: ConversationListProps) {
+  const navigate = useNavigate();
   const { user } = useAuthStore();
   const { activeConversation, setActiveConversation, onlineUsers } =
     useChatStore();
+
+  const handleConversationClick = (conversation: Conversation) => {
+    const isMobile = window.innerWidth < 768;
+
+    if (isMobile) {
+      // On mobile, navigate to the conversation route
+      navigate(`/chat/${conversation._id}`);
+    } else {
+      // On desktop, just set active conversation if it's not already active
+      if (activeConversation?._id !== conversation._id) {
+        setActiveConversation(conversation);
+      }
+    }
+  };
 
   const getConversationInfo = useCallback(
     (conversation: Conversation) => {
@@ -101,11 +117,10 @@ const ConversationList = memo(function ConversationList({
           <button
             key={conversation._id}
             type="button"
-            onClick={() => setActiveConversation(conversation)}
+            onClick={() => handleConversationClick(conversation)}
             className={`w-full p-3 rounded-lg text-left transition-colors ${
               isActive ? "bg-primary text-white" : "hover:bg-muted"
             }`}
-            disabled={conversation._id === activeConversation?._id}
           >
             <div className="flex items-center space-x-3">
               {/* Avatar */}
@@ -113,7 +128,7 @@ const ConversationList = memo(function ConversationList({
                 <div
                   className={`w-12 h-12 rounded-full flex items-center justify-center ${
                     isAI
-                      ? "bg-accent"
+                      ? "bg-gradient-to-br from-purple-500 to-blue-600"
                       : avatar
                       ? "bg-cover bg-center"
                       : "bg-primary"
@@ -136,12 +151,12 @@ const ConversationList = memo(function ConversationList({
 
                 {/* Online indicator */}
                 {isOnline && !isAI && (
-                  <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-accent border-2 border-background rounded-full"></div>
+                  <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 border-2 border-background rounded-full"></div>
                 )}
 
                 {/* AI indicator */}
                 {isAI && (
-                  <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-accent border-2 border-background rounded-full flex items-center justify-center">
+                  <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-gradient-to-br from-purple-500 to-blue-600 border-2 border-background rounded-full flex items-center justify-center">
                     <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
                   </div>
                 )}

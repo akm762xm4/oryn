@@ -4,10 +4,29 @@ import {
   login,
   verifyOTP,
   resendOTP,
+  updateProfile,
+  uploadAvatar,
 } from "../controllers/authController.js";
 import rateLimit from "express-rate-limit";
+import multer from "multer";
+import { authenticate } from "../middleware/auth.js";
 
 const router = express.Router();
+
+// Configure multer for file uploads
+const upload = multer({
+  dest: "uploads/",
+  limits: {
+    fileSize: 2 * 1024 * 1024, // 2MB limit
+  },
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype.startsWith("image/")) {
+      cb(null, true);
+    } else {
+      cb(new Error("Only image files are allowed"), false);
+    }
+  },
+});
 
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
@@ -21,10 +40,19 @@ const otpLimiter = rateLimit({
   message: { message: "Please wait before requesting another OTP" },
 });
 
+// Public routes
 router.post("/register", authLimiter, register);
-// router.post("/login",authLimiter, login);
 router.post("/login", login);
 router.post("/verify-otp", authLimiter, verifyOTP);
 router.post("/resend-otp", otpLimiter, resendOTP);
+
+// Protected routes
+router.put("/profile", authenticate, updateProfile);
+router.post(
+  "/upload-avatar",
+  authenticate,
+  upload.single("avatar"),
+  uploadAvatar
+);
 
 export default router;

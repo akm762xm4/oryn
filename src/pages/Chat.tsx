@@ -1,4 +1,5 @@
-import { useEffect, useCallback } from "react";
+import { useEffect, useCallback, useState } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import { useAuthStore } from "../stores/authStore";
 import { useChatStore } from "../stores/chatStore";
 import { socketService } from "../lib/socket";
@@ -8,16 +9,33 @@ import api from "../lib/api";
 import toast from "react-hot-toast";
 
 export default function Chat() {
-  const { user, token } = useAuthStore();
+  const { conversationId } = useParams();
+  const navigate = useNavigate();
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const { user, token, updateUser } = useAuthStore();
   const {
+    conversations,
+    activeConversation,
     setConversations,
+    setActiveConversation,
     addMessage,
     setUserOnline,
     setUserOffline,
     setUserTyping,
     removeUserTyping,
     updateMessage,
+    updateUserInMessages,
   } = useChatStore();
+
+  // Handle window resize for mobile detection
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   const loadConversations = useCallback(async () => {
     try {
@@ -27,6 +45,19 @@ export default function Chat() {
       toast.error("Failed to load conversations");
     }
   }, [setConversations]);
+
+  // Handle mobile conversation selection
+  useEffect(() => {
+    if (conversationId && conversations.length > 0) {
+      const conversation = conversations.find((c) => c._id === conversationId);
+      if (conversation) {
+        setActiveConversation(conversation);
+      } else {
+        // Conversation not found, redirect to chat home
+        navigate("/chat");
+      }
+    }
+  }, [conversationId, conversations, setActiveConversation, navigate]);
 
   useEffect(() => {
     if (!token || !user) return;
@@ -75,10 +106,11 @@ export default function Chat() {
     });
 
     socketService.onUserTyping(({ userId, username, isTyping }) => {
-      if (isTyping) {
-        setUserTyping("current", userId, username);
-      } else {
-        removeUserTyping("current", userId);
+      const { activeConversation } = useChatStore.getState();
+      if (activeConversation && isTyping) {
+        setUserTyping(activeConversation._id, userId, username);
+      } else if (activeConversation) {
+        removeUserTyping(activeConversation._id, userId);
       }
     });
 
@@ -92,12 +124,49 @@ export default function Chat() {
       toast.error(error.message);
     });
 
+    // Listen for real-time avatar updates
+    socketService.onAvatarUpdated(({ userId, username, avatar }) => {
+      // Update current user's avatar if it's their own update
+      if (user && userId === user._id) {
+        updateUser({ avatar });
+        toast.success("Avatar updated successfully!");
+      } else {
+        // Show notification for other users' avatar updates
+        toast(`${username} updated their profile picture`, { duration: 3000 });
+      }
+
+      // Update user avatar in all messages and conversations
+      updateUserInMessages(userId, { avatar });
+
+      // Reload conversations to update avatars in the sidebar
+      loadConversations();
+    });
+
+    // Listen for real-time profile updates
+    socketService.onProfileUpdated(({ userId, username, email, avatar }) => {
+      // Update current user's profile if it's their own update
+      if (user && userId === user._id) {
+        updateUser({ username, email, avatar });
+        toast.success("Profile updated successfully!");
+      } else {
+        // Show notification for other users' profile updates
+        toast(`${username} updated their profile`, { duration: 3000 });
+      }
+
+      // Update user info in all messages and conversations
+      updateUserInMessages(userId, { username, email, avatar });
+
+      // Reload conversations to update user info in the sidebar
+      loadConversations();
+    });
+
     return () => {
       socketService.disconnect();
     };
   }, [
     token,
     user,
+    updateUser,
     loadConversations,
     addMessage,
     setUserOnline,
@@ -105,12 +174,27 @@ export default function Chat() {
     setUserTyping,
     removeUserTyping,
     updateMessage,
+    updateUserInMessages,
   ]);
+
+  // Mobile: Show only ChatArea when conversation is selected
+  const showMobileChat = isMobile && conversationId && activeConversation;
 
   return (
     <div className="h-screen bg-background flex">
-      <Sidebar />
-      <ChatArea />
+      {/* Desktop: Always show both sidebar and chat area */}
+      {!isMobile && (
+        <>
+          <Sidebar />
+          <ChatArea />
+        </>
+      )}
+
+      {/* Mobile: Show sidebar (conversation list) when no conversation selected */}
+      {isMobile && !conversationId && <Sidebar />}
+
+      {/* Mobile: Show chat area when conversation is selected */}
+      {showMobileChat && <ChatArea showBackButton={true} />}
     </div>
   );
 }

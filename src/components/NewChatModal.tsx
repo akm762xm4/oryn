@@ -247,7 +247,7 @@ export default function NewChatModal({ isOpen, onClose }: NewChatModalProps) {
                           )}
                         </div>
                         {searchUser.isOnline && (
-                          <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-accent border-2 border-background rounded-full"></div>
+                          <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-500 border-2 border-background rounded-full"></div>
                         )}
                       </div>
 

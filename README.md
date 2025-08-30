@@ -1,4 +1,4 @@
-# MERN Stack Realtime Chat App
+# Oryn - MERN Stack Realtime Chat App
 
 A modern, feature-rich chat application built with the MERN stack (MongoDB, Express.js, React, Node.js) and Socket.io for real-time communication.
 

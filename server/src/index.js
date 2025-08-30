@@ -34,6 +34,9 @@ app.use(
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true }));
 
+// Make io available to routes
+app.set("io", io);
+
 // Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/chat", chatRoutes);

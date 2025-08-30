@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Search,
   Plus,
@@ -6,8 +7,8 @@ import {
   LogOut,
   Moon,
   Sun,
-  MessageCircle,
   Bot,
+  User,
 } from "lucide-react";
 import { useAuthStore } from "../stores/authStore";
 import { useChatStore } from "../stores/chatStore";
@@ -23,6 +24,7 @@ export default function Sidebar() {
   const [searchQuery, setSearchQuery] = useState("");
   const [showNewChat, setShowNewChat] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
+  const navigate = useNavigate();
   const { user, logout } = useAuthStore();
   const { conversations, setActiveConversation } = useChatStore();
   const { isDark, toggleTheme } = useThemeStore();
@@ -54,8 +56,16 @@ export default function Sidebar() {
         isGroup: false,
       });
 
-      // The backend now handles adding the virtual AI participant
-      setActiveConversation(response.data);
+      const isMobile = window.innerWidth < 768;
+
+      if (isMobile) {
+        // On mobile, navigate to the AI conversation
+        navigate(`/chat/${response.data._id}`);
+      } else {
+        // On desktop, just set active conversation
+        setActiveConversation(response.data);
+      }
+
       toast.success("AI chat started!");
     } catch (error) {
       console.error("AI conversation error:", error);
@@ -64,15 +74,16 @@ export default function Sidebar() {
   };
 
   return (
-    <div className="w-80 bg-card border-r border-gray-200 dark:border-gray-700 flex flex-col">
+    <div className="w-full md:w-80 bg-card border-r border-border flex flex-col">
       {/* Header */}
-      <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+      <div className="p-4 border-b border-border">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center space-x-2">
-            <div className="bg-primary p-2 rounded-lg">
-              <MessageCircle className="w-5 h-5 text-white" />
-            </div>
-            <h1 className="text-lg font-semibold text-foreground">Chats</h1>
+            <img
+              src="./Oryn Full.png"
+              alt="Oryn"
+              className="h-8 w-auto object-contain"
+            />
           </div>
           <div className="flex items-center space-x-1">
             <button
@@ -120,7 +131,7 @@ export default function Sidebar() {
       </div>
 
       {/* Action Buttons */}
-      <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+      <div className="p-4 border-b border-border">
         <div className="flex space-x-2">
           <button
             type="button"
@@ -133,7 +144,7 @@ export default function Sidebar() {
           <button
             type="button"
             onClick={createAIConversation}
-            className="flex items-center justify-center bg-accent text-white py-2 px-4 rounded-lg hover:bg-accent/90 transition-colors"
+            className="flex items-center justify-center bg-gradient-to-br from-purple-500 to-blue-600 text-white py-2 px-4 rounded-lg hover:from-purple-600 hover:to-blue-700 transition-all duration-200 shadow-md"
             title="Chat with AI"
           >
             <Bot className="w-4 h-4" />
@@ -147,12 +158,18 @@ export default function Sidebar() {
       </div>
 
       {/* User Info */}
-      <div className="p-4 border-t border-gray-200 dark:border-gray-700">
+      <div className="p-4 border-t border-border">
         <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center">
-            <span className="text-white font-medium">
-              {user?.username?.charAt(0).toUpperCase()}
-            </span>
+          <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center overflow-hidden">
+            {user?.avatar ? (
+              <img
+                src={user.avatar}
+                alt={user.username}
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <User className="w-6 h-6 text-white" />
+            )}
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-sm font-medium text-foreground truncate">

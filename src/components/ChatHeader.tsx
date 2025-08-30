@@ -1,11 +1,27 @@
 import { useState } from "react";
-import { Phone, Video, MoreVertical, Search, Bot, Users } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import {
+  Phone,
+  Video,
+  MoreVertical,
+  Search,
+  Bot,
+  Users,
+  ArrowLeft,
+} from "lucide-react";
 import { useAuthStore } from "../stores/authStore";
 import { useChatStore } from "../stores/chatStore";
 import { formatDistanceToNow } from "date-fns";
 
-export default function ChatHeader() {
+interface ChatHeaderProps {
+  showBackButton?: boolean;
+}
+
+export default function ChatHeader({
+  showBackButton = false,
+}: ChatHeaderProps) {
   const [showSearch, setShowSearch] = useState(false);
+  const navigate = useNavigate();
   const { user } = useAuthStore();
   const { activeConversation, onlineUsers } = useChatStore();
 
@@ -59,14 +75,25 @@ export default function ChatHeader() {
   return (
     <div className="bg-background border-b border-border p-4">
       <div className="flex items-center justify-between">
-        {/* Left side - User info */}
+        {/* Left side - Back button and User info */}
         <div className="flex items-center space-x-3">
+          {/* Back button for mobile */}
+          {showBackButton && (
+            <button
+              type="button"
+              onClick={() => navigate("/chat")}
+              className="p-2 rounded-lg hover:bg-muted transition-colors md:hidden"
+              title="Back to conversations"
+            >
+              <ArrowLeft className="w-5 h-5 text-muted-foreground" />
+            </button>
+          )}
           {/* Avatar */}
           <div className="relative">
             <div
               className={`w-10 h-10 rounded-full flex items-center justify-center ${
                 isAI
-                  ? "bg-accent"
+                  ? "bg-gradient-to-br from-purple-500 to-blue-600"
                   : avatar
                   ? "bg-cover bg-center"
                   : "bg-primary"
@@ -89,7 +116,7 @@ export default function ChatHeader() {
 
             {/* Online indicator */}
             {isOnline && !isAI && (
-              <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-accent border-2 border-background rounded-full"></div>
+              <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-500 border-2 border-background rounded-full"></div>
             )}
           </div>
 
@@ -122,26 +149,6 @@ export default function ChatHeader() {
           >
             <Search className="w-5 h-5 text-muted-foreground" />
           </button>
-
-          {!isAI && (
-            <>
-              <button
-                type="button"
-                className="p-2 rounded-lg hover:bg-muted transition-colors"
-                title="Voice call"
-              >
-                <Phone className="w-5 h-5 text-muted-foreground" />
-              </button>
-
-              <button
-                type="button"
-                className="p-2 rounded-lg hover:bg-muted transition-colors"
-                title="Video call"
-              >
-                <Video className="w-5 h-5 text-muted-foreground" />
-              </button>
-            </>
-          )}
 
           <button
             type="button"

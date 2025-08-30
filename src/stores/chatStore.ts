@@ -60,4 +60,21 @@ export const useChatStore = create<ChatState>((set) => ({
       newTypingUsers.delete(`${conversationId}-${userId}`);
       return { typingUsers: newTypingUsers };
     }),
+
+  updateUserInMessages: (userId, updates) =>
+    set((state) => ({
+      messages: state.messages.map((msg) =>
+        msg.sender._id === userId
+          ? { ...msg, sender: { ...msg.sender, ...updates } }
+          : msg
+      ),
+      conversations: state.conversations.map((conv) => ({
+        ...conv,
+        participants: conv.participants.map((participant) =>
+          participant._id === userId
+            ? { ...participant, ...updates }
+            : participant
+        ),
+      })),
+    })),
 }));

@@ -164,50 +164,38 @@ export default function MessageInput() {
 
   return (
     <div className="border-t border-border p-4 bg-background">
-      <form onSubmit={handleSendMessage} className="flex items-end space-x-3 ">
+      <form
+        onSubmit={handleSendMessage}
+        className="flex items-center md:space-x-3 space-x-2 "
+      >
         {/* Image upload */}
-        <div className="flex space-x-2">
-          <label className="p-2 rounded-lg hover:bg-muted transition-colors cursor-pointer ">
-            <Image className="w-5 h-5 text-muted-foreground" />
-            <input
-              title="image-upload"
-              type="file"
-              accept="image/*"
-              onChange={handleImageUpload}
-              className="hidden"
-              disabled={isSending}
-            />
-          </label>
-
-          {/* AI mode indicator */}
-          {isAIMode && (
-            <div className="p-2 rounded-lg bg-accent/10 border border-accent/20">
-              <Bot className="w-5 h-5 text-accent" />
-            </div>
-          )}
-        </div>
+        {!isAIMode && (
+          <div className="flex space-x-2">
+            <label className="p-2 rounded-lg hover:bg-muted transition-colors cursor-pointer ">
+              <Image className="w-8 h-8 text-muted-foreground" />
+              <input
+                title="image-upload"
+                type="file"
+                accept="image/*"
+                onChange={handleImageUpload}
+                className="hidden"
+                disabled={isSending}
+              />
+            </label>
+          </div>
+        )}
 
         {/* Message input */}
-        <div className="flex-1 relative">
-          <textarea
-            ref={inputRef}
-            value={message}
-            onChange={(e) => handleTyping(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder={isAIMode ? "Ask AI anything..." : "Type a message..."}
-            className="w-full px-4 py-3 bg-muted rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary focus:bg-background border border-transparent focus:border-primary resize-none min-h-[48px] max-h-32 overflow-hidden"
-            rows={1}
-            disabled={isSending}
-          />
-          Emoji button
-          <button
-            title="emoji"
-            type="button"
-            className="absolute right-3 top-1/2 transform -translate-y-1/2 p-1 rounded hover:bg-background transition-colors"
-          >
-            <Smile className="w-4 h-4 text-muted-foreground" />
-          </button>
-        </div>
+        <textarea
+          ref={inputRef}
+          value={message}
+          onChange={(e) => handleTyping(e.target.value)}
+          onKeyDown={handleKeyDown}
+          placeholder={isAIMode ? "Ask AI anything..." : "Type a message..."}
+          className="w-full px-4 py-3 bg-muted rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary focus:bg-background border border-transparent focus:border-primary resize-none min-h-[48px] max-h-32 overflow-hidden"
+          rows={1}
+          disabled={isSending}
+        />
 
         {/* Send button */}
         <button

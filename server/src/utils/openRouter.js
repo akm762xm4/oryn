@@ -12,7 +12,7 @@ const openai = new OpenAI({
   baseURL: "https://openrouter.ai/api/v1",
   defaultHeaders: {
     "HTTP-Referer": "http://localhost:3000",
-    "X-Title": "MERN Chat App",
+    "X-Title": "Oryn Chat App",
   },
 });
 
@@ -30,7 +30,7 @@ export const generateAIResponse = async (message, conversationHistory = []) => {
     {
       role: "system",
       content:
-        "You are a helpful AI assistant in a chat application. Keep responses concise and friendly.",
+        "You are a helpful AI assistant in Oryn chat application. Keep responses concise and friendly.",
     },
     ...conversationHistory.slice(-5).map((msg) => ({
       role: msg.isAI ? "assistant" : "user",
@@ -87,7 +87,7 @@ export const generateAIResponseWithModel = async (
       {
         role: "system",
         content:
-          "You are a helpful AI assistant in a chat application. Keep responses concise and friendly.",
+          "You are a helpful AI assistant in Oryn chat application. Keep responses concise and friendly.",
       },
       ...conversationHistory.slice(-5).map((msg) => ({
         role: msg.isAI ? "assistant" : "user",
