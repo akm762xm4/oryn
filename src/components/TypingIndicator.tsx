@@ -1,10 +1,12 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, memo } from "react";
 
 interface TypingIndicatorProps {
   users: string[];
 }
 
-export default function TypingIndicator({ users }: TypingIndicatorProps) {
+const TypingIndicator = memo(function TypingIndicator({
+  users,
+}: TypingIndicatorProps) {
   const [isVisible, setIsVisible] = useState(false);
   const [shouldRender, setShouldRender] = useState(false);
 
@@ -77,4 +79,6 @@ export default function TypingIndicator({ users }: TypingIndicatorProps) {
       </div>
     </div>
   );
-}
+});
+
+export default TypingIndicator;

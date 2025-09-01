@@ -53,11 +53,7 @@ export default function Login() {
         {/* Header */}
         <div className="text-center mb-6 sm:mb-8">
           <div className="flex items-center justify-center mb-4">
-            <div className="bg-primary p-3 rounded-full">
-              <span className="text-white font-bold text-2xl sm:text-3xl">
-                O
-              </span>
-            </div>
+            <img src="/Oryn Full.png" alt="Oryn Logo" className="h-16 w-auto" />
           </div>
           <h1 className="text-xl sm:text-2xl font-bold text-foreground">
             Welcome Back to Oryn
