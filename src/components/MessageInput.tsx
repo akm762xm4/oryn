@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Send, Image, Bot, Smile } from "lucide-react";
+import { Send, Image } from "lucide-react";
 import { useChatStore } from "../stores/chatStore";
 import { socketService } from "../lib/socket";
 import api from "../lib/api";
@@ -13,7 +13,11 @@ export default function MessageInput() {
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  const { activeConversation, addMessage } = useChatStore();
+  const {
+    activeConversation,
+    addMessage,
+    // isLoadingMessages
+  } = useChatStore();
 
   useEffect(() => {
     // Auto-resize textarea
@@ -59,7 +63,13 @@ export default function MessageInput() {
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!message.trim() || !activeConversation || isSending) return;
+    if (
+      !message.trim() ||
+      !activeConversation ||
+      isSending
+      // ||isLoadingMessages
+    )
+      return;
 
     const messageContent = message.trim();
     setMessage("");
@@ -163,23 +173,33 @@ export default function MessageInput() {
   if (!activeConversation) return null;
 
   return (
-    <div className="border-t border-border p-4 bg-background">
+    <div className="border-t border-border p-4 md:p-4 px-6 md:px-4 bg-background">
       <form
         onSubmit={handleSendMessage}
-        className="flex items-center md:space-x-3 space-x-2 "
+        className="flex items-end space-x-3 md:space-x-3"
       >
         {/* Image upload */}
         {!isAIMode && (
           <div className="flex space-x-2">
-            <label className="p-2 rounded-lg hover:bg-muted transition-colors cursor-pointer ">
-              <Image className="w-8 h-8 text-muted-foreground" />
+            <label
+              className={`p-3 md:p-2 rounded-xl md:rounded-lg transition-colors touch-manipulation ${
+                // isLoadingMessages ||
+                isSending
+                  ? "opacity-50 cursor-not-allowed"
+                  : "hover:bg-muted active:bg-muted/80 cursor-pointer"
+              }`}
+            >
+              <Image className="w-7 h-7 md:w-6 md:h-6 text-muted-foreground" />
               <input
                 title="image-upload"
                 type="file"
                 accept="image/*"
                 onChange={handleImageUpload}
                 className="hidden"
-                disabled={isSending}
+                disabled={
+                  isSending
+                  // || isLoadingMessages
+                }
               />
             </label>
           </div>
@@ -192,28 +212,34 @@ export default function MessageInput() {
           onChange={(e) => handleTyping(e.target.value)}
           onKeyDown={handleKeyDown}
           placeholder={isAIMode ? "Ask AI anything..." : "Type a message..."}
-          className="w-full px-4 py-3 bg-muted rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary focus:bg-background border border-transparent focus:border-primary resize-none min-h-[48px] max-h-32 overflow-hidden"
+          className="flex-1 px-5 md:px-4 py-4 md:py-3 text-base md:text-sm bg-muted rounded-3xl md:rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary focus:bg-background border border-transparent focus:border-primary resize-none min-h-[52px] md:min-h-[48px] max-h-32 overflow-hidden touch-manipulation"
           rows={1}
-          disabled={isSending}
+          disabled={
+            isSending
+            // || isLoadingMessages
+          }
         />
 
         {/* Send button */}
         <button
           type="submit"
-          disabled={!message.trim() || isSending}
-          className="p-3 bg-primary text-white rounded-full hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          disabled={
+            !message.trim() || isSending
+            // || isLoadingMessages
+          }
+          className="p-4 md:p-3 bg-primary text-white rounded-full hover:bg-primary/90 active:bg-primary/80 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors touch-manipulation shadow-md"
         >
           {isSending ? (
-            <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+            <div className="w-6 h-6 md:w-5 md:h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
           ) : (
-            <Send className="w-5 h-5" />
+            <Send className="w-6 h-6 md:w-5 md:h-5" />
           )}
         </button>
       </form>
 
       {/* AI mode notice */}
       {isAIMode && (
-        <div className="mt-2 text-xs text-muted-foreground text-center">
+        <div className="mt-3 md:mt-2 text-sm md:text-xs text-muted-foreground text-center">
           🤖 You're chatting with AI Assistant
         </div>
       )}

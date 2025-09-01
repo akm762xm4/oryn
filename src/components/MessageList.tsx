@@ -7,6 +7,7 @@ import MessageBubble from "./MessageBubble";
 import TypingIndicator from "./TypingIndicator";
 import api from "../lib/api";
 import toast from "react-hot-toast";
+import type { Message } from "../types";
 
 const MessageList = memo(function MessageList() {
   const [isLoading, setIsLoading] = useState(false);
@@ -28,18 +29,18 @@ const MessageList = memo(function MessageList() {
 
       isLoadingRef.current = true;
       setIsLoading(true);
+
       try {
         const response = await api.get(
           `/chat/conversations/${activeConversation._id}/messages?page=${pageNum}&limit=50`
         );
 
+        const messagesData: Message[] = response.data;
+
         if (pageNum === 1) {
-          setMessages(response.data);
+          setMessages(messagesData);
         } else {
-          setMessages((prevMessages: any) => [
-            ...response.data,
-            ...prevMessages,
-          ]);
+          setMessages([...messagesData, ...messages]);
         }
 
         setHasMore(response.data.length === 50);

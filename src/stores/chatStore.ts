@@ -7,8 +7,15 @@ export const useChatStore = create<ChatState>((set) => ({
   messages: [],
   onlineUsers: new Set(),
   typingUsers: new Map(),
+  isLoadingConversations: false,
+  // isLoadingMessages: false,
 
   setConversations: (conversations) => set({ conversations }),
+
+  setLoadingConversations: (isLoading: boolean) =>
+    set({ isLoadingConversations: isLoading }),
+
+  // setLoadingMessages: (isLoading) => set({ isLoadingMessages: isLoading }),
 
   setActiveConversation: (conversation) =>
     set({

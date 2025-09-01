@@ -52,6 +52,8 @@ export interface ChatState {
   messages: Message[];
   onlineUsers: Set<string>;
   typingUsers: Map<string, string>;
+  isLoadingConversations: boolean;
+  // isLoadingMessages: boolean;
   setConversations: (conversations: Conversation[]) => void;
   setActiveConversation: (conversation: Conversation | null) => void;
   setMessages: (messages: Message[]) => void;
@@ -66,4 +68,6 @@ export interface ChatState {
   ) => void;
   removeUserTyping: (conversationId: string, userId: string) => void;
   updateUserInMessages: (userId: string, updates: Partial<User>) => void;
+  setLoadingConversations: (isLoading: boolean) => void;
+  // setLoadingMessages: (isLoading: boolean) => void;
 }

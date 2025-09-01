@@ -99,7 +99,7 @@ export default function Sidebar() {
         <div className="flex items-center justify-between mb-6 md:mb-4">
           <div className="flex items-center space-x-2">
             <img
-              src="./Oryn Full.png"
+              src="/Oryn Full.png"
               alt="Oryn"
               className="h-10 md:h-8 w-auto object-contain"
             />

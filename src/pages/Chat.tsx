@@ -25,6 +25,7 @@ export default function Chat() {
     removeUserTyping,
     updateMessage,
     updateUserInMessages,
+    setLoadingConversations,
   } = useChatStore();
 
   // Handle window resize for mobile detection
@@ -38,13 +39,16 @@ export default function Chat() {
   }, []);
 
   const loadConversations = useCallback(async () => {
+    setLoadingConversations(true);
     try {
       const response = await api.get("/chat/conversations");
       setConversations(response.data);
     } catch {
       toast.error("Failed to load conversations");
+    } finally {
+      setLoadingConversations(false);
     }
-  }, [setConversations]);
+  }, [setConversations, setLoadingConversations]);
 
   // Handle mobile conversation selection
   useEffect(() => {
@@ -70,29 +74,37 @@ export default function Chat() {
 
     // Socket event listeners
     socketService.onNewMessage((message) => {
-      addMessage(
-        message as {
+      const typedMessage = message as {
+        _id: string;
+        conversation: string;
+        sender: {
           _id: string;
-          conversation: string;
-          sender: {
-            _id: string;
-            username: string;
-            email: string;
-            avatar: string;
-            isOnline: boolean;
-            lastSeen: Date;
-            isVerified: boolean;
-          };
-          content: string;
-          messageType: "text" | "image" | "ai";
-          imageUrl?: string;
-          status: "sent" | "delivered" | "read";
-          readBy: { user: string; readAt: Date }[];
-          isAI: boolean;
-          createdAt: Date;
-          updatedAt: Date;
-        }
+          username: string;
+          email: string;
+          avatar: string;
+          isOnline: boolean;
+          lastSeen: Date;
+          isVerified: boolean;
+        };
+        content: string;
+        messageType: "text" | "image" | "ai";
+        imageUrl?: string;
+        status: "sent" | "delivered" | "read";
+        readBy: { user: string; readAt: Date }[];
+        isAI: boolean;
+        createdAt: Date;
+        updatedAt: Date;
+      };
+
+      // Check if message already exists to prevent duplicates
+      const { messages } = useChatStore.getState();
+      const messageExists = messages.some(
+        (msg) => msg._id === typedMessage._id
       );
+
+      if (!messageExists) {
+        addMessage(typedMessage);
+      }
     });
 
     socketService.onUserOnline(({ userId, username }) => {
@@ -175,6 +187,7 @@ export default function Chat() {
     removeUserTyping,
     updateMessage,
     updateUserInMessages,
+    setLoadingConversations,
   ]);
 
   // Mobile: Show only ChatArea when conversation is selected
