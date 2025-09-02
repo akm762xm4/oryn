@@ -120,25 +120,26 @@ export default function ChatHeader({
   const { name, subtitle, avatar, isOnline, isAI } = getConversationInfo();
 
   return (
-    <div className="bg-background border-b border-border p-4 md:p-4 px-6 md:px-4">
-      <div className="flex items-center justify-between">
+    <div className="bg-background border-b border-border p-4">
+      <div className="flex items-center justify-between flex-wrap gap-2">
         {/* Left side - Back button and User info */}
-        <div className="flex items-center space-x-4 md:space-x-3">
+        <div className="flex items-center space-x-2 min-w-0 flex-1">
           {/* Back button for mobile */}
           {showBackButton && (
             <button
               type="button"
               onClick={() => navigate("/chat")}
-              className="p-3 md:p-2 rounded-xl md:rounded-lg hover:bg-muted active:bg-muted/80 transition-colors md:hidden touch-manipulation"
+              className="p-2 rounded-lg hover:bg-muted active:bg-muted/80 transition-colors md:hidden"
               title="Back to conversations"
             >
-              <ArrowLeft className="w-6 h-6 md:w-5 md:h-5 text-muted-foreground" />
+              <ArrowLeft className="w-5 h-5 text-muted-foreground" />
             </button>
           )}
+
           {/* Avatar */}
-          <div className="relative">
+          <div className="relative flex-shrink-0">
             <div
-              className={`w-12 h-12 md:w-10 md:h-10 rounded-full flex items-center justify-center ${
+              className={`w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center overflow-hidden ${
                 isAI
                   ? "bg-gradient-to-br from-purple-500 to-blue-600"
                   : avatar
@@ -147,7 +148,7 @@ export default function ChatHeader({
               }`}
             >
               {isAI ? (
-                <Bot className="w-6 h-6 md:w-5 md:h-5 text-white" />
+                <Bot className="w-5 h-5 md:w-6 md:h-6 text-white" />
               ) : avatar ? (
                 <img
                   src={avatar}
@@ -155,7 +156,7 @@ export default function ChatHeader({
                   className="w-full h-full rounded-full object-cover"
                 />
               ) : (
-                <span className="text-white font-medium text-lg md:text-base">
+                <span className="text-white font-medium text-base md:text-lg">
                   {name.charAt(0).toUpperCase()}
                 </span>
               )}
@@ -163,23 +164,23 @@ export default function ChatHeader({
 
             {/* Online indicator */}
             {isOnline && !isAI && (
-              <div className="absolute -bottom-1 -right-1 w-4 h-4 md:w-3 md:h-3 bg-green-500 border-2 border-background rounded-full"></div>
+              <div className="absolute -bottom-1 -right-1 w-3 h-3 md:w-4 md:h-4 bg-green-500 border-2 border-background rounded-full"></div>
             )}
           </div>
 
           {/* Name and status */}
           <div className="flex-1 min-w-0">
-            <h2 className="font-semibold md:font-semibold text-lg md:text-base text-foreground flex items-center truncate">
+            <h2 className="font-semibold text-base md:text-lg text-foreground flex items-center truncate">
               {name}
               {activeConversation.isGroup && (
-                <Users className="w-5 h-5 md:w-4 md:h-4 ml-2 text-muted-foreground flex-shrink-0" />
+                <Users className="w-4 h-4 md:w-5 md:h-5 ml-1 text-muted-foreground flex-shrink-0" />
               )}
               {isAI && (
-                <Bot className="w-5 h-5 md:w-4 md:h-4 ml-2 text-accent flex-shrink-0" />
+                <Bot className="w-4 h-4 md:w-5 md:h-5 ml-1 text-accent flex-shrink-0" />
               )}
             </h2>
             <p
-              className={`text-base md:text-sm truncate ${
+              className={`text-xs md:text-sm truncate ${
                 isOnline ? "text-accent" : "text-muted-foreground"
               }`}
             >
@@ -190,26 +191,16 @@ export default function ChatHeader({
 
         {/* Right side - Actions */}
         <div className="flex items-center space-x-1 md:space-x-2">
-          <button
-            type="button"
-            onClick={() => setShowSearch(!showSearch)}
-            className="p-3 md:p-2 rounded-xl md:rounded-lg hover:bg-muted active:bg-muted/80 transition-colors touch-manipulation"
-            title="Search messages"
-          >
-            <Search className="w-6 h-6 md:w-5 md:h-5 text-muted-foreground" />
-          </button>
-
           <div className="relative" ref={menuRef}>
             <button
               type="button"
               onClick={() => setShowMenu(!showMenu)}
-              className="p-3 md:p-2 rounded-xl md:rounded-lg hover:bg-muted active:bg-muted/80 transition-colors touch-manipulation"
+              className="p-2 md:p-3 rounded-lg hover:bg-muted active:bg-muted/80 transition-colors"
               title="More options"
             >
-              <MoreVertical className="w-6 h-6 md:w-5 md:h-5 text-muted-foreground" />
+              <MoreVertical className="w-5 h-5 md:w-6 md:h-6 text-muted-foreground" />
             </button>
 
-            {/* Popup Menu */}
             {showMenu && (
               <div className="absolute right-0 top-full mt-2 w-48 bg-background border border-border rounded-lg shadow-lg z-50">
                 <div className="py-1">
@@ -231,13 +222,13 @@ export default function ChatHeader({
 
       {/* Search bar */}
       {showSearch && (
-        <div className="mt-6 md:mt-4">
+        <div className="mt-3 md:mt-4">
           <div className="relative">
-            <Search className="absolute left-4 md:left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 md:w-4 md:h-4 text-muted-foreground" />
+            <Search className="absolute left-3 md:left-4 top-1/2 transform -translate-y-1/2 w-4 h-4 md:w-5 md:h-5 text-muted-foreground" />
             <input
               type="text"
               placeholder="Search in this conversation..."
-              className="w-full pl-12 md:pl-10 pr-4 py-4 md:py-2 text-base md:text-sm bg-muted rounded-xl md:rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:bg-background border border-transparent focus:border-primary touch-manipulation"
+              className="w-full pl-10 md:pl-12 pr-4 py-2 md:py-3 text-sm md:text-base bg-muted rounded-lg md:rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:bg-background border border-transparent focus:border-primary"
               autoFocus
             />
           </div>

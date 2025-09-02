@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Search,
@@ -28,12 +28,13 @@ export default function Sidebar() {
   const [showNewChat, setShowNewChat] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
-  const [isSearchFocused, setIsSearchFocused] = useState(false);
   const navigate = useNavigate();
   const { user, logout } = useAuthStore();
   const { conversations, setActiveConversation, isLoadingConversations } =
     useChatStore();
   const { isDark, toggleTheme } = useThemeStore();
+  const [showMenu, setShowMenu] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
 
   const filteredConversations = conversations.filter((conv) => {
     if (!searchQuery) return true;
@@ -48,6 +49,23 @@ export default function Sidebar() {
     }
   });
 
+  // Close menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setShowMenu(false);
+      }
+    };
+
+    if (showMenu) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [showMenu]);
+
   const handleLogout = () => {
     socketService.disconnect();
     logout();
@@ -57,14 +75,6 @@ export default function Sidebar() {
 
   const clearSearch = () => {
     setSearchQuery("");
-  };
-
-  const handleSearchFocus = () => {
-    setIsSearchFocused(true);
-  };
-
-  const handleSearchBlur = () => {
-    setIsSearchFocused(false);
   };
 
   const createAIConversation = async () => {
@@ -105,34 +115,50 @@ export default function Sidebar() {
             />
           </div>
           <div className="flex items-center space-x-2 md:space-x-1">
-            <button
-              type="button"
-              onClick={toggleTheme}
-              className="p-3 md:p-2 rounded-xl md:rounded-lg hover:bg-muted transition-colors touch-manipulation"
-              title="Toggle theme"
-            >
-              {isDark ? (
-                <Sun className="w-5 h-5 md:w-4 md:h-4" />
-              ) : (
-                <Moon className="w-5 h-5 md:w-4 md:h-4" />
+            <div className="relative" ref={menuRef}>
+              <button
+                type="button"
+                onClick={() => setShowMenu(true)}
+                className="p-3 md:p-2 rounded-xl md:rounded-lg hover:bg-muted transition-colors touch-manipulation"
+                title="Profile settings"
+              >
+                <Settings className="w-5 h-5 md:w-4 md:h-4" />
+              </button>
+              {/* Popup Menu */}
+              {showMenu && (
+                <div className="absolute right-0 top-full mt-2 w-48 bg-background border border-border rounded-lg shadow-lg z-50">
+                  <div className="py-1">
+                    <button
+                      onClick={() => setShowProfile(true)}
+                      className="w-full px-4 py-3 text-left text-sm hover:bg-muted transition-colors flex items-center space-x-3"
+                    >
+                      <User className="w-4 h-4" />
+                      <span>Profile Settings</span>
+                    </button>
+
+                    <button
+                      onClick={toggleTheme}
+                      className="w-full px-4 py-3 text-left text-sm hover:bg-muted transition-colors flex items-center space-x-3"
+                    >
+                      {isDark ? (
+                        <Sun className="w-4 h-4" />
+                      ) : (
+                        <Moon className="w-4 h-4" />
+                      )}
+                      <span>Toggle Theme</span>
+                    </button>
+
+                    <button
+                      onClick={() => setShowLogoutConfirm(true)}
+                      className="w-full px-4 py-3 text-left text-sm hover:bg-muted transition-colors flex items-center space-x-3 text-destructive"
+                    >
+                      <LogOut className="w-4 h-4" />
+                      <span>Logout</span>
+                    </button>
+                  </div>
+                </div>
               )}
-            </button>
-            <button
-              type="button"
-              onClick={() => setShowProfile(true)}
-              className="p-3 md:p-2 rounded-xl md:rounded-lg hover:bg-muted transition-colors touch-manipulation"
-              title="Profile settings"
-            >
-              <Settings className="w-5 h-5 md:w-4 md:h-4" />
-            </button>
-            <button
-              type="button"
-              onClick={() => setShowLogoutConfirm(true)}
-              className="p-3 md:p-2 rounded-xl md:rounded-lg hover:bg-muted transition-colors text-destructive touch-manipulation"
-              title="Logout"
-            >
-              <LogOut className="w-5 h-5 md:w-4 md:h-4" />
-            </button>
+            </div>
           </div>
         </div>
 
@@ -144,8 +170,6 @@ export default function Sidebar() {
             placeholder="Search conversations..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            onFocus={handleSearchFocus}
-            onBlur={handleSearchBlur}
             className="w-full pl-12 md:pl-10 pr-12 md:pr-10 py-4 md:py-2 text-base md:text-sm bg-muted rounded-xl md:rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:bg-background border border-transparent focus:border-primary touch-manipulation"
           />
           {searchQuery && (
@@ -193,11 +217,8 @@ export default function Sidebar() {
       </div>
 
       {/* User Info */}
-      <div
-        className={`p-4 md:p-4 px-6 md:px-4 border-t border-border transition-all duration-300 ${
-          isSearchFocused ? "md:block hidden" : "block"
-        }`}
-      >
+      {}
+      <div className="p-4 md:p-4 px-6 md:px-4 border-t border-border transition-all duration-300 hidden md:block ">
         <button
           type="button"
           onClick={() => setShowProfile(true)}

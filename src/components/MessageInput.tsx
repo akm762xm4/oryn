@@ -173,33 +173,29 @@ export default function MessageInput() {
   if (!activeConversation) return null;
 
   return (
-    <div className="border-t border-border p-4 md:p-4 px-6 md:px-4 bg-background">
+    <div className="border-t border-border bg-background p-2  sticky bottom-0 left-0 w-full z-20">
       <form
         onSubmit={handleSendMessage}
-        className="flex items-end space-x-3 md:space-x-3"
+        className="flex items-center gap-2 md:gap-3   rounded-lg"
       >
         {/* Image upload */}
         {!isAIMode && (
-          <div className="flex space-x-2">
+          <div className="flex-shrink-0">
             <label
-              className={`p-3 md:p-2 rounded-xl md:rounded-lg transition-colors touch-manipulation ${
-                // isLoadingMessages ||
+              className={`p-2 md:p-3 rounded-lg md:rounded-xl transition-colors touch-manipulation ${
                 isSending
                   ? "opacity-50 cursor-not-allowed"
                   : "hover:bg-muted active:bg-muted/80 cursor-pointer"
               }`}
             >
-              <Image className="w-7 h-7 md:w-6 md:h-6 text-muted-foreground" />
+              <Image className="w-6 h-6 md:w-7 md:h-7 text-muted-foreground" />
               <input
                 title="image-upload"
                 type="file"
                 accept="image/*"
                 onChange={handleImageUpload}
                 className="hidden"
-                disabled={
-                  isSending
-                  // || isLoadingMessages
-                }
+                disabled={isSending}
               />
             </label>
           </div>
@@ -212,34 +208,28 @@ export default function MessageInput() {
           onChange={(e) => handleTyping(e.target.value)}
           onKeyDown={handleKeyDown}
           placeholder={isAIMode ? "Ask AI anything..." : "Type a message..."}
-          className="flex-1 px-5 md:px-4 py-4 md:py-3 text-base md:text-sm bg-muted rounded-3xl md:rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary focus:bg-background border border-transparent focus:border-primary resize-none min-h-[52px] md:min-h-[48px] max-h-32 overflow-hidden touch-manipulation"
+          className="flex-1 px-4 md:px-5 py-2.5 md:py-3 text-sm md:text-base bg-muted rounded-2xl md:rounded-3xl focus:outline-none focus:ring-2 focus:ring-primary focus:bg-background border border-transparent focus:border-primary resize-none min-h-[44px] md:min-h-[48px] max-h-32 overflow-hidden touch-manipulation"
           rows={1}
-          disabled={
-            isSending
-            // || isLoadingMessages
-          }
+          disabled={isSending}
         />
 
         {/* Send button */}
         <button
           type="submit"
-          disabled={
-            !message.trim() || isSending
-            // || isLoadingMessages
-          }
-          className="p-4 md:p-3 bg-primary text-white rounded-full hover:bg-primary/90 active:bg-primary/80 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors touch-manipulation shadow-md"
+          disabled={!message.trim() || isSending}
+          className="flex-shrink-0 p-3 md:p-4 bg-primary text-white rounded-full hover:bg-primary/90 active:bg-primary/80 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors touch-manipulation shadow-md"
         >
           {isSending ? (
-            <div className="w-6 h-6 md:w-5 md:h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+            <div className="w-5 h-5 md:w-6 md:h-6 border-2 border-white border-t-transparent rounded-full animate-spin" />
           ) : (
-            <Send className="w-6 h-6 md:w-5 md:h-5" />
+            <Send className="w-5 h-5 md:w-6 md:h-6" />
           )}
         </button>
       </form>
 
       {/* AI mode notice */}
       {isAIMode && (
-        <div className="mt-3 md:mt-2 text-sm md:text-xs text-muted-foreground text-center">
+        <div className="mt-1 text-xs md:text-sm text-muted-foreground text-center">
           🤖 You're chatting with AI Assistant
         </div>
       )}

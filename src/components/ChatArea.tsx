@@ -29,7 +29,7 @@ export default function ChatArea({ showBackButton = false }: ChatAreaProps) {
           <div className="flex justify-center">
             <img
               className="h-28 md:h-24 w-auto object-contain"
-              src="./Oryn Full.png"
+              src="/Oryn Full.png"
               alt="Oryn Logo"
             />
           </div>

@@ -45,7 +45,7 @@ const MessageBubble = memo(function MessageBubble({
       <div
         className={`flex ${
           isOwn ? "flex-row-reverse" : "flex-row"
-        } items-end space-x-2 max-w-[70%]`}
+        } items-end space-x-2 max-w-[75%]`}
       >
         {/* Avatar */}
         {!isOwn && showAvatar && (
