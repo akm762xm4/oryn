@@ -1,13 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import {
-  MoreVertical,
-  Search,
-  Bot,
-  Users,
-  ArrowLeft,
-  Trash2,
-} from "lucide-react";
+import { MoreVertical, Bot, Users, ArrowLeft, Trash2 } from "lucide-react";
 import { useAuthStore } from "../stores/authStore";
 import { useChatStore } from "../stores/chatStore";
 import { formatDistanceToNow } from "date-fns";
