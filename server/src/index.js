@@ -17,7 +17,8 @@ const server = createServer(app);
 // Define allowed origins
 const allowedOrigins = [
   process.env.CLIENT_URL || "http://localhost:5173",
-  "https://oryn-frontend-5w0e7ebhv-akm762xm4s-projects.vercel.app",
+  // "https://oryn-frontend-5w0e7ebhv-akm762xm4s-projects.vercel.app",
+  "https://oryn-frontend.vercel.app",
 ];
 
 const io = new Server(server, {
