@@ -190,24 +190,15 @@ export default function Chat() {
     setLoadingConversations,
   ]);
 
-  // Mobile: Show only ChatArea when conversation is selected
-  const showMobileChat = isMobile && conversationId && activeConversation;
-
   return (
     <div className="h-screen bg-background flex">
-      {/* Desktop: Always show both sidebar and chat area */}
-      {!isMobile && (
-        <>
-          <Sidebar />
-          <ChatArea />
-        </>
+      {/* Show sidebar when: Desktop (always) OR Mobile (no conversation selected) */}
+      {(!isMobile || (isMobile && !conversationId)) && <Sidebar />}
+
+      {/* Show single ChatArea when: Desktop (always) OR Mobile (conversation selected) */}
+      {(!isMobile || (isMobile && conversationId && activeConversation)) && (
+        <ChatArea showBackButton={isMobile} />
       )}
-
-      {/* Mobile: Show sidebar (conversation list) when no conversation selected */}
-      {isMobile && !conversationId && <Sidebar />}
-
-      {/* Mobile: Show chat area when conversation is selected */}
-      {showMobileChat && <ChatArea showBackButton={true} />}
     </div>
   );
 }

@@ -18,12 +18,20 @@ export const useChatStore = create<ChatState>((set) => ({
   // setLoadingMessages: (isLoading) => set({ isLoadingMessages: isLoading }),
 
   setActiveConversation: (conversation) =>
-    set({
-      activeConversation: conversation,
-      messages: [], // Clear messages when switching conversations
+    set((state) => {
+      if (state.activeConversation?._id !== conversation?._id) {
+        return { activeConversation: conversation, messages: [] };
+      }
+      return { activeConversation: conversation };
     }),
 
-  setMessages: (messages) => set({ messages }),
+  setMessages: (messagesOrUpdater) =>
+    set((state) => ({
+      messages:
+        typeof messagesOrUpdater === "function"
+          ? messagesOrUpdater(state.messages)
+          : messagesOrUpdater,
+    })),
 
   addMessage: (message) =>
     set((state) => ({

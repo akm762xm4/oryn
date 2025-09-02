@@ -23,6 +23,8 @@ const ConversationList = memo(function ConversationList({
 
     if (isMobile) {
       // On mobile, navigate to the conversation route
+
+      setActiveConversation(conversation);
       navigate(`/chat/${conversation._id}`);
     } else {
       // On desktop, just set active conversation if it's not already active

@@ -2,6 +2,8 @@ import { useChatStore } from "../stores/chatStore";
 import ChatHeader from "./ChatHeader";
 import MessageList from "./MessageList";
 import MessageInput from "./MessageInput";
+import { useEffect } from "react";
+import { socketService } from "../lib/socket";
 
 interface ChatAreaProps {
   showBackButton?: boolean;
@@ -9,6 +11,16 @@ interface ChatAreaProps {
 
 export default function ChatArea({ showBackButton = false }: ChatAreaProps) {
   const { activeConversation } = useChatStore();
+
+  useEffect(() => {
+    if (!activeConversation) return;
+
+    socketService.joinConversation(activeConversation._id);
+
+    return () => {
+      socketService.leaveConversation(activeConversation._id);
+    };
+  }, [activeConversation?._id]);
 
   if (!activeConversation) {
     return (

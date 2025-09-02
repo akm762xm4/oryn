@@ -5,12 +5,14 @@ import { useChatStore } from "../stores/chatStore";
 import { socketService } from "../lib/socket";
 import MessageBubble from "./MessageBubble";
 import TypingIndicator from "./TypingIndicator";
+import { MessageListSkeleton } from "./skeletons/MessageSkeleton";
 import api from "../lib/api";
 import toast from "react-hot-toast";
 import type { Message } from "../types";
 
 const MessageList = memo(function MessageList() {
   const [isLoading, setIsLoading] = useState(false);
+  const [isInitialLoading, setIsInitialLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const [page, setPage] = useState(1);
   const [isUserScrolling, setIsUserScrolling] = useState(false);
@@ -18,6 +20,9 @@ const MessageList = memo(function MessageList() {
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const isLoadingRef = useRef(false);
   const scrollTimeoutRef = useRef<NodeJS.Timeout>();
+  const currentConversationIdRef = useRef<string | null>(null);
+  const previousMessageCountRef = useRef(0);
+  const typingRef = useRef<HTMLDivElement | null>(null);
 
   const { user } = useAuthStore();
   const { activeConversation, messages, setMessages, typingUsers } =
@@ -30,34 +35,84 @@ const MessageList = memo(function MessageList() {
       isLoadingRef.current = true;
       setIsLoading(true);
 
+      // Set initial loading state for first page
+      if (pageNum === 1) {
+        setIsInitialLoading(true);
+      }
+
       try {
+        // Use smaller limit for initial load (faster), larger for pagination
+        const limit = pageNum === 1 ? 20 : 30;
+
         const response = await api.get(
-          `/chat/conversations/${activeConversation._id}/messages?page=${pageNum}&limit=50`
+          `/chat/conversations/${activeConversation._id}/messages?page=${pageNum}&limit=${limit}&sort=desc`
         );
 
         const messagesData: Message[] = response.data;
 
         if (pageNum === 1) {
-          setMessages(messagesData);
+          // For initial load, messages come newest first, so reverse them for display
+          setMessages(messagesData.reverse());
+          // Messages load naturally at bottom, no scrolling
         } else {
-          setMessages([...messagesData, ...messages]);
+          const container = messagesContainerRef.current;
+          const scrollHeightBefore = container ? container.scrollHeight : 0;
+          const scrollTopBefore = container ? container.scrollTop : 0;
+
+          // Ensure messagesData is always an array
+          const safeMessages = Array.isArray(messagesData)
+            ? [...messagesData].reverse()
+            : [];
+
+          setMessages((prev: Message[]) => {
+            const newMessages: Message[] = [...safeMessages, ...prev];
+
+            // Restore scroll position after React paints
+            requestAnimationFrame(() => {
+              if (container) {
+                const scrollHeightAfter = container.scrollHeight;
+                const heightDifference = scrollHeightAfter - scrollHeightBefore;
+                container.scrollTop = scrollTopBefore + heightDifference;
+              }
+            });
+
+            return newMessages;
+          });
         }
 
-        setHasMore(response.data.length === 50);
+        setHasMore(response.data.length === limit);
         setPage(pageNum);
       } catch {
         toast.error("Failed to load messages");
       } finally {
         isLoadingRef.current = false;
         setIsLoading(false);
+        if (pageNum === 1) {
+          setIsInitialLoading(false);
+        }
       }
     },
-    [activeConversation, setMessages]
+    [activeConversation, messages, setMessages]
   );
 
   useEffect(() => {
     if (activeConversation) {
-      loadMessages();
+      // Check if conversation changed
+      const conversationChanged =
+        currentConversationIdRef.current !== activeConversation._id;
+
+      if (conversationChanged) {
+        // Reset state when switching conversations
+        setMessages([]); // clear old messages
+        setPage(1);
+        setHasMore(true);
+        setIsUserScrolling(false);
+        previousMessageCountRef.current = 0;
+        currentConversationIdRef.current = activeConversation._id;
+
+        loadMessages(1); // fetch fresh messages for new conversation
+      }
+
       socketService.joinConversation(activeConversation._id);
     }
 
@@ -70,22 +125,47 @@ const MessageList = memo(function MessageList() {
         clearTimeout(scrollTimeoutRef.current);
       }
     };
-  }, [activeConversation, loadMessages]);
+  }, [activeConversation?._id]); // Only depend on conversation ID
 
+  // Auto-scroll when typing indicator appears (if at bottom)
   useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
+    const typingUsersInConv = getTypingUsersForConversation();
 
-  // Smooth scroll when typing indicator appears/disappears
-  useEffect(() => {
-    const typingInThisConv = getTypingUsersForConversation();
-    if (typingInThisConv.length > 0) {
-      // Small delay to ensure typing indicator is rendered before scrolling
-      setTimeout(() => {
-        scrollToBottom(true); // Force scroll for typing indicator
-      }, 150);
+    if (typingUsersInConv.length > 0 && !isUserScrolling) {
+      if (messagesEndRef.current) {
+        messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+      }
     }
-  }, [typingUsers, activeConversation, user?._id]);
+  }, [typingUsers, isUserScrolling]);
+
+  // Scroll to bottom on initial load and new messages
+  useEffect(() => {
+    const currentMessageCount = messages.length;
+    const previousMessageCount = previousMessageCountRef.current;
+
+    // Scroll to bottom if:
+    // 1. It's the initial load (previous count was 0)
+    // 2. New messages were added (count increased and we're not loading older messages)
+    if (previousMessageCount === 0 && currentMessageCount > 0) {
+      // Initial load - scroll to bottom to show latest messages
+      if (messagesEndRef.current) {
+        messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+      }
+    } else if (
+      currentMessageCount > previousMessageCount &&
+      (!isLoading || page === 1)
+    ) {
+      // New messages received - scroll to bottom
+      if (messagesEndRef.current) {
+        messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+      }
+    }
+
+    // Update the previous count
+    previousMessageCountRef.current = currentMessageCount;
+  }, [messages.length, isLoading, page]);
+
+  // No auto-scrolling for typing indicator - it just appears at bottom
 
   const loadMoreMessages = useCallback(() => {
     if (hasMore && !isLoadingRef.current) {
@@ -93,24 +173,7 @@ const MessageList = memo(function MessageList() {
     }
   }, [hasMore, loadMessages, page]);
 
-  const scrollToBottom = (force = false) => {
-    if (messagesEndRef.current) {
-      // Check if user is near bottom (within 100px) or force scroll
-      const container = messagesContainerRef.current;
-      if (container && !force && !isUserScrolling) {
-        const { scrollTop, scrollHeight, clientHeight } = container;
-        const isNearBottom = scrollHeight - scrollTop - clientHeight < 100;
-
-        // Only auto-scroll if user is near bottom
-        if (!isNearBottom) return;
-      }
-
-      messagesEndRef.current.scrollIntoView({
-        behavior: "smooth",
-        block: "end",
-      });
-    }
-  };
+  // No scrollToBottom function needed - user controls all scrolling
 
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
     const { scrollTop } = e.currentTarget;
@@ -169,10 +232,15 @@ const MessageList = memo(function MessageList() {
 
   if (!activeConversation) return null;
 
+  // Show loading skeleton for initial load
+  if (isInitialLoading && messages.length === 0) {
+    return <MessageListSkeleton />;
+  }
+
   return (
     <div
       ref={messagesContainerRef}
-      className="flex-1 overflow-y-auto p-4 space-y-4"
+      className="flex flex-col flex-1 overflow-y-auto p-4 space-y-4"
       onScroll={handleScroll}
     >
       {/* Load more indicator */}
@@ -220,7 +288,9 @@ const MessageList = memo(function MessageList() {
       })}
 
       {/* Typing indicator */}
-      <TypingIndicator users={getTypingUsersForConversation()} />
+      <div ref={typingRef}>
+        <TypingIndicator users={getTypingUsersForConversation()} />
+      </div>
 
       {/* Scroll anchor */}
       <div ref={messagesEndRef} />

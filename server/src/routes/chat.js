@@ -11,6 +11,7 @@ import {
   searchMessages,
   debugConversations,
   fixDuplicateConversations,
+  clearMessages,
 } from "../controllers/chatController.js";
 
 const router = express.Router();
@@ -42,6 +43,7 @@ router.use(authenticate);
 router.get("/conversations", getConversations);
 router.post("/conversations", createConversation);
 router.get("/conversations/:conversationId/messages", getMessages);
+router.delete("/conversations/:conversationId/messages", clearMessages);
 router.post("/messages", sendMessage);
 router.get("/search/users", searchUsers);
 router.get("/search/messages", searchMessages);

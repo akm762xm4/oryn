@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Phone,
@@ -8,10 +8,13 @@ import {
   Bot,
   Users,
   ArrowLeft,
+  Trash2,
 } from "lucide-react";
 import { useAuthStore } from "../stores/authStore";
 import { useChatStore } from "../stores/chatStore";
 import { formatDistanceToNow } from "date-fns";
+import api from "../lib/api";
+import toast from "react-hot-toast";
 
 interface ChatHeaderProps {
   showBackButton?: boolean;
@@ -21,9 +24,53 @@ export default function ChatHeader({
   showBackButton = false,
 }: ChatHeaderProps) {
   const [showSearch, setShowSearch] = useState(false);
+  const [showMenu, setShowMenu] = useState(false);
+  const [isClearing, setIsClearing] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
   const { user } = useAuthStore();
-  const { activeConversation, onlineUsers } = useChatStore();
+  const { activeConversation, onlineUsers, setMessages } = useChatStore();
+
+  // Close menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setShowMenu(false);
+      }
+    };
+
+    if (showMenu) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [showMenu]);
+
+  const handleClearChat = async () => {
+    if (!activeConversation || isClearing) return;
+
+    try {
+      setIsClearing(true);
+      setShowMenu(false);
+
+      // Call backend API to clear messages
+      await api.delete(
+        `/chat/conversations/${activeConversation._id}/messages`
+      );
+
+      // Clear messages from local state
+      setMessages([]);
+
+      toast.success("Chat cleared successfully");
+    } catch (error) {
+      console.error("Failed to clear chat:", error);
+      toast.error("Failed to clear chat");
+    } finally {
+      setIsClearing(false);
+    }
+  };
 
   if (!activeConversation) return null;
 
@@ -152,13 +199,33 @@ export default function ChatHeader({
             <Search className="w-6 h-6 md:w-5 md:h-5 text-muted-foreground" />
           </button>
 
-          <button
-            type="button"
-            className="p-3 md:p-2 rounded-xl md:rounded-lg hover:bg-muted active:bg-muted/80 transition-colors touch-manipulation"
-            title="More options"
-          >
-            <MoreVertical className="w-6 h-6 md:w-5 md:h-5 text-muted-foreground" />
-          </button>
+          <div className="relative" ref={menuRef}>
+            <button
+              type="button"
+              onClick={() => setShowMenu(!showMenu)}
+              className="p-3 md:p-2 rounded-xl md:rounded-lg hover:bg-muted active:bg-muted/80 transition-colors touch-manipulation"
+              title="More options"
+            >
+              <MoreVertical className="w-6 h-6 md:w-5 md:h-5 text-muted-foreground" />
+            </button>
+
+            {/* Popup Menu */}
+            {showMenu && (
+              <div className="absolute right-0 top-full mt-2 w-48 bg-background border border-border rounded-lg shadow-lg z-50">
+                <div className="py-1">
+                  <button
+                    type="button"
+                    onClick={handleClearChat}
+                    disabled={isClearing}
+                    className="w-full px-4 py-3 text-left text-sm hover:bg-muted transition-colors flex items-center space-x-3 text-destructive hover:text-destructive disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                    <span>{isClearing ? "Clearing..." : "Clear Chat"}</span>
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
