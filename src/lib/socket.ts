@@ -12,7 +12,7 @@ class SocketService {
         "http://localhost:5000",
       {
         auth: {
-          token,
+          token: this.token,
         },
         transports: ["websocket", "polling"],
       }

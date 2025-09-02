@@ -1,8 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  Phone,
-  Video,
   MoreVertical,
   Search,
   Bot,
@@ -23,7 +21,7 @@ interface ChatHeaderProps {
 export default function ChatHeader({
   showBackButton = false,
 }: ChatHeaderProps) {
-  const [showSearch, setShowSearch] = useState(false);
+  // const [showSearch, setShowSearch] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
   const [isClearing, setIsClearing] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -221,7 +219,7 @@ export default function ChatHeader({
       </div>
 
       {/* Search bar */}
-      {showSearch && (
+      {/* {showSearch && (
         <div className="mt-3 md:mt-4">
           <div className="relative">
             <Search className="absolute left-3 md:left-4 top-1/2 transform -translate-y-1/2 w-4 h-4 md:w-5 md:h-5 text-muted-foreground" />
@@ -233,7 +231,7 @@ export default function ChatHeader({
             />
           </div>
         </div>
-      )}
+      )} */}
     </div>
   );
 }
