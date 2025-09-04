@@ -17,8 +17,8 @@ const server = createServer(app);
 // Define allowed origins
 const allowedOrigins = [
   process.env.CLIENT_URL || "http://localhost:5173",
-  // "https://oryn-frontend-5w0e7ebhv-akm762xm4s-projects.vercel.app",
   "https://oryn-frontend.vercel.app",
+  "https://*.vercel.app", // Allow all vercel.app subdomains
 ];
 
 const io = new Server(server, {
@@ -40,14 +40,16 @@ app.use(
       // Allow requests with no origin (like mobile apps or curl requests)
       if (!origin) return callback(null, true);
 
-      if (allowedOrigins.indexOf(origin) !== -1) {
+      // Allow all vercel.app domains
+      if (origin.endsWith(".vercel.app") || allowedOrigins.includes(origin)) {
         callback(null, true);
       } else {
         callback(new Error("Not allowed by CORS"));
       }
     },
     credentials: true,
-    methods: ["GET", "POST"],
+    methods: ["GET", "POST", "OPTIONS"], // Add OPTIONS for preflight
+    allowedHeaders: ["Content-Type", "Authorization"], // Add allowed headers
   })
 );
 app.use(express.json({ limit: "10mb" }));
