@@ -14,36 +14,49 @@ import { handleConnection } from "./socket/socketHandlers.js";
 const app = express();
 const server = createServer(app);
 
-// Define allowed origins
-const allowedOrigins = [
-  process.env.CLIENT_URL || "http://localhost:5173",
-  "https://oryn-frontend.vercel.app",
-  "https://oryn-frontend-akm762xm4s-projects.vercel.app",
-];
+// ✅ CORS configuration (dynamic to allow vercel previews)
+const corsOptions = {
+  origin: (origin, callback) => {
+    if (!origin) return callback(null, true); // allow requests like Postman
 
-app.use(
-  cors({
-    origin: allowedOrigins,
-    credentials: true,
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  })
-);
+    const allowed = [
+      process.env.CLIENT_URL || "http://localhost:5173",
+      "https://oryn-frontend.vercel.app",
+    ];
+
+    if (
+      allowed.includes(origin) ||
+      origin.endsWith(".vercel.app") // allow all vercel previews
+    ) {
+      return callback(null, true);
+    }
+
+    return callback(new Error("Not allowed by CORS"));
+  },
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+};
+
+// ✅ Apply CORS first
+app.use(cors(corsOptions));
+
+// ✅ Explicitly handle preflight requests
+app.options("*", cors(corsOptions));
+
+// ✅ Then Helmet (so it doesn’t override CORS headers)
+app.use(helmet());
+
+// Other middleware
+app.use(express.json({ limit: "10mb" }));
+app.use(express.urlencoded({ extended: true }));
 
 // Connect to database
 connectDB();
 
-// Middleware
-app.use(helmet());
+// Socket.io setup with CORS
 const io = new Server(server, {
-  cors: {
-    origin: allowedOrigins,
-    credentials: true,
-    methods: ["GET", "POST"],
-  },
+  cors: corsOptions,
 });
-
-app.use(express.json({ limit: "10mb" }));
-app.use(express.urlencoded({ extended: true }));
 
 // Make io available to routes
 app.set("io", io);
@@ -78,7 +91,6 @@ app.use("*", (req, res) => {
 });
 
 const PORT = process.env.PORT || 5000;
-
 server.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+  console.log(`✅ Server running on port ${PORT}`);
 });
