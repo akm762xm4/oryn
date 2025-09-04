@@ -18,9 +18,21 @@ const server = createServer(app);
 const allowedOrigins = [
   process.env.CLIENT_URL || "http://localhost:5173",
   "https://oryn-frontend.vercel.app",
-  "https://*.vercel.app", // Allow all vercel.app subdomains
 ];
 
+app.use(
+  cors({
+    origin: allowedOrigins,
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  })
+);
+
+// Connect to database
+connectDB();
+
+// Middleware
+app.use(helmet());
 const io = new Server(server, {
   cors: {
     origin: allowedOrigins,
@@ -29,29 +41,6 @@ const io = new Server(server, {
   },
 });
 
-// Connect to database
-connectDB();
-
-// Middleware
-app.use(helmet());
-app.use(
-  cors({
-    origin: function (origin, callback) {
-      // Allow requests with no origin (like mobile apps or curl requests)
-      if (!origin) return callback(null, true);
-
-      // Allow all vercel.app domains
-      if (origin.endsWith(".vercel.app") || allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        callback(new Error("Not allowed by CORS"));
-      }
-    },
-    credentials: true,
-    methods: ["GET", "POST", "OPTIONS"], // Add OPTIONS for preflight
-    allowedHeaders: ["Content-Type", "Authorization"], // Add allowed headers
-  })
-);
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true }));
 
