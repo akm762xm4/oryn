@@ -53,9 +53,29 @@ app.use(express.urlencoded({ extended: true }));
 // Connect to database
 connectDB();
 
-// Socket.io setup with CORS
+// --- Socket.io setup with dynamic CORS ---
 const io = new Server(server, {
-  cors: corsOptions,
+  cors: {
+    origin: (origin, callback) => {
+      if (!origin) return callback(null, true); // Postman / local scripts
+
+      const allowed = [
+        process.env.CLIENT_URL || "http://localhost:5173",
+        "https://oryn-frontend.vercel.app",
+      ];
+
+      if (
+        allowed.includes(origin) ||
+        origin.endsWith(".vercel.app") // ✅ allow Vercel previews
+      ) {
+        return callback(null, true);
+      }
+
+      return callback(new Error("Not allowed by CORS"));
+    },
+    credentials: true,
+    methods: ["GET", "POST"],
+  },
 });
 
 // Make io available to routes
