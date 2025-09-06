@@ -8,13 +8,15 @@ class SocketService {
     this.token = token;
 
     this.socket = io(
-      import.meta.env.VITE_API_URL?.replace("/api", "") ||
-        "http://localhost:5000",
+      import.meta.env.DEV
+        ? "http://localhost:5000"
+        : import.meta.env.VITE_API_URL?.replace("/api", "") ||
+            "http://localhost:5000",
       {
         auth: {
           token: this.token,
         },
-        transports: ["websocket", "polling"],
+        transports: ["polling", "websocket"],
       }
     );
 
@@ -77,6 +79,22 @@ class SocketService {
     this.socket?.emit("markAsRead", { conversationId, messageId });
   }
 
+  onMessageDelivered(
+    callback: (data: { messageId: string; deliveredAt: Date }) => void
+  ) {
+    this.socket?.on("messageDelivered", callback);
+  }
+
+  onMessageRead(
+    callback: (data: {
+      messageId: string;
+      readBy: string;
+      readAt: Date;
+    }) => void
+  ) {
+    this.socket?.on("messageRead", callback);
+  }
+
   // Event listeners
   onNewMessage(callback: (message: unknown) => void) {
     this.socket?.on("newMessage", callback);
@@ -104,16 +122,6 @@ class SocketService {
     }) => void
   ) {
     this.socket?.on("userOffline", callback);
-  }
-
-  onMessageRead(
-    callback: (data: {
-      messageId: string;
-      readBy: string;
-      readAt: Date;
-    }) => void
-  ) {
-    this.socket?.on("messageRead", callback);
   }
 
   onError(callback: (error: { message: string }) => void) {

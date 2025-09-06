@@ -1,9 +1,11 @@
 import { useState, useRef, useEffect } from "react";
 import { Send, Image } from "lucide-react";
 import { useChatStore } from "../stores/chatStore";
+import { useAuthStore } from "../stores/authStore";
 import { socketService } from "../lib/socket";
 import api from "../lib/api";
 import toast from "react-hot-toast";
+import { usePreferencesStore } from "../stores/preferencesStore";
 
 export default function MessageInput() {
   const [message, setMessage] = useState("");
@@ -12,10 +14,14 @@ export default function MessageInput() {
   const [isAIMode, setIsAIMode] = useState(false);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const { soundEnabled, vibrationEnabled } = usePreferencesStore();
+  const { user } = useAuthStore();
 
   const {
     activeConversation,
     addMessage,
+    updateMessage,
+    setAiGenerating,
     // isLoadingMessages
   } = useChatStore();
 
@@ -83,20 +89,42 @@ export default function MessageInput() {
 
     try {
       if (isAIMode) {
-        // Send message to AI conversation via API (will auto-generate AI response)
+        // Optimistically add user's message immediately
+        const tempId = `temp-${Date.now()}`;
+        const optimisticMessage = {
+          _id: tempId,
+          conversation: activeConversation._id,
+          sender: user || { _id: "me" },
+          content: messageContent,
+          messageType: "text" as const,
+          status: "sent" as const,
+          readBy: [],
+          isAI: false,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        } as any;
+        addMessage(optimisticMessage);
+
+        // Show AI generating state
+        setAiGenerating(true);
+
+        // Send message to AI conversation via API
         const response = await api.post("/chat/messages", {
           conversationId: activeConversation._id,
           content: messageContent,
           messageType: "text",
         });
 
-        // Handle response - could be single message or both user + AI message
-        if (response.data.userMessage && response.data.aiMessage) {
-          addMessage(response.data.userMessage);
+        // Replace optimistic user message if server returned it
+        if (response.data.userMessage) {
+          updateMessage(tempId, response.data.userMessage);
           addMessage(response.data.aiMessage);
         } else {
+          // If API returns a single combined message, append it (AI response will come via socket or payload)
           addMessage(response.data);
         }
+
+        setAiGenerating(false);
       } else {
         // Send regular message via socket
         socketService.sendMessage({
@@ -105,9 +133,25 @@ export default function MessageInput() {
           messageType: "text",
         });
       }
+
+      // Feedback
+      if (soundEnabled) {
+        const ctx = new (window.AudioContext ||
+          (window as any).webkitAudioContext)();
+        const o = ctx.createOscillator();
+        const g = ctx.createGain();
+        o.type = "triangle";
+        o.frequency.setValueAtTime(880, ctx.currentTime);
+        g.gain.setValueAtTime(0.05, ctx.currentTime);
+        o.connect(g).connect(ctx.destination);
+        o.start();
+        o.stop(ctx.currentTime + 0.05);
+      }
+      if (vibrationEnabled && navigator.vibrate) navigator.vibrate(20);
     } catch {
       toast.error("Failed to send message");
       setMessage(messageContent); // Restore message on error
+      setAiGenerating(false);
     } finally {
       setIsSending(false);
     }

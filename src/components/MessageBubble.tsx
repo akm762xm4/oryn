@@ -1,5 +1,5 @@
 import { memo } from "react";
-import { format } from "date-fns";
+import { formatDistanceToNow, format } from "date-fns";
 import { Check, CheckCheck, Bot } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -27,15 +27,49 @@ const MessageBubble = memo(function MessageBubble({
   const getMessageStatus = () => {
     if (!isOwn) return null;
 
-    const isRead = message.readBy.some((read) => read.user !== user?._id);
+    const hasRead = (message.readBy || []).some(
+      (read) => read.user !== user?._id
+    );
 
-    if (isRead) {
-      return <CheckCheck className="w-4 h-4 text-accent" />;
-    } else if (message.status === "delivered") {
-      return <CheckCheck className="w-4 h-4 text-muted-foreground" />;
-    } else {
-      return <Check className="w-4 h-4 text-muted-foreground" />;
+    if (hasRead || message.status === "read") {
+      return (
+        <span className="inline-flex items-center gap-1">
+          <CheckCheck className="w-4 h-4 text-accent" />
+          <span className="hidden md:inline">
+            seen{" "}
+            {formatDistanceToNow(
+              new Date(message.updatedAt || message.createdAt),
+              { addSuffix: true }
+            )}
+          </span>
+        </span>
+      );
     }
+    if (message.status === "delivered") {
+      return (
+        <span className="inline-flex items-center gap-1 text-muted-foreground">
+          <CheckCheck className="w-4 h-4" />
+          <span className="hidden md:inline">
+            sent{" "}
+            {formatDistanceToNow(
+              new Date(message.updatedAt || message.createdAt),
+              { addSuffix: true }
+            )}
+          </span>
+        </span>
+      );
+    }
+    return (
+      <span className="inline-flex items-center gap-1 text-muted-foreground">
+        <Check className="w-4 h-4" />
+        <span className="hidden md:inline">
+          sent{" "}
+          {formatDistanceToNow(new Date(message.createdAt), {
+            addSuffix: true,
+          })}
+        </span>
+      </span>
+    );
   };
 
   const isAI = message.isAI || message.messageType === "ai";

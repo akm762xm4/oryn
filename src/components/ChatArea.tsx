@@ -2,7 +2,7 @@ import { useChatStore } from "../stores/chatStore";
 import ChatHeader from "./ChatHeader";
 import MessageList from "./MessageList";
 import MessageInput from "./MessageInput";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { socketService } from "../lib/socket";
 
 interface ChatAreaProps {
@@ -10,6 +10,15 @@ interface ChatAreaProps {
 }
 
 export default function ChatArea({ showBackButton = false }: ChatAreaProps) {
+  const [showMedia, setShowMedia] = useState(false);
+  const { messages } = useChatStore();
+
+  useEffect(() => {
+    const handler = () => setShowMedia(true);
+    window.addEventListener("open-view-media", handler as EventListener);
+    return () =>
+      window.removeEventListener("open-view-media", handler as EventListener);
+  }, []);
   const { activeConversation } = useChatStore();
 
   useEffect(() => {
@@ -59,6 +68,37 @@ export default function ChatArea({ showBackButton = false }: ChatAreaProps) {
       <ChatHeader showBackButton={showBackButton} />
       <MessageList />
       <MessageInput />
+      {showMedia && (
+        <div
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+          onClick={() => setShowMedia(false)}
+        >
+          <div
+            className="bg-background rounded-2xl p-4 max-w-3xl w-full max-h-[80vh] overflow-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="text-lg font-semibold mb-3">Media & Files</div>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+              {messages
+                .filter((m) => m.messageType === "image" && m.imageUrl)
+                .map((m) => (
+                  <img
+                    key={m._id}
+                    src={m.imageUrl!}
+                    alt="media"
+                    className="w-full h-40 object-cover rounded-lg"
+                  />
+                ))}
+              {messages.filter((m) => m.messageType === "image" && m.imageUrl)
+                .length === 0 && (
+                <div className="text-sm text-muted-foreground">
+                  No media yet in this chat.
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

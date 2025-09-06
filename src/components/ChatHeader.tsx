@@ -1,11 +1,13 @@
 import { useState, useRef, useEffect } from "react";
+import type { Conversation } from "../types";
 import { useNavigate } from "react-router-dom";
-import { MoreVertical, Bot, Users, ArrowLeft, Trash2 } from "lucide-react";
+import { MoreVertical, Bot, Users, ArrowLeft } from "lucide-react";
 import { useAuthStore } from "../stores/authStore";
 import { useChatStore } from "../stores/chatStore";
 import { formatDistanceToNow } from "date-fns";
 import api from "../lib/api";
 import toast from "react-hot-toast";
+import ConfirmModal from "./ConfirmModal";
 
 interface ChatHeaderProps {
   showBackButton?: boolean;
@@ -17,10 +19,19 @@ export default function ChatHeader({
   // const [showSearch, setShowSearch] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
   const [isClearing, setIsClearing] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
   const { user } = useAuthStore();
-  const { activeConversation, onlineUsers, setMessages } = useChatStore();
+  const {
+    activeConversation,
+    onlineUsers,
+    messages,
+    setMessages,
+    setConversations,
+    setActiveConversation,
+    toggleConversationPin,
+  } = useChatStore();
 
   // Close menu when clicking outside
   useEffect(() => {
@@ -40,7 +51,7 @@ export default function ChatHeader({
   }, [showMenu]);
 
   const handleClearChat = async () => {
-    if (!activeConversation || isClearing) return;
+    if (!activeConversation || isClearing || messages.length === 0) return;
 
     try {
       setIsClearing(true);
@@ -53,11 +64,48 @@ export default function ChatHeader({
 
       // Clear messages from local state
       setMessages([]);
-
+      setActiveConversation(null);
+      setConversations((convs: Conversation[]) => {
+        const updated = convs.map((c) => {
+          if (c._id === activeConversation._id) {
+            return { ...c, lastMessage: undefined };
+          }
+          return c;
+        });
+        return updated;
+      });
       toast.success("Chat cleared successfully");
     } catch (error) {
       console.error("Failed to clear chat:", error);
       toast.error("Failed to clear chat");
+    } finally {
+      setIsClearing(false);
+    }
+  };
+
+  const handleDeleteConversation = async () => {
+    if (!activeConversation || isClearing) return;
+    try {
+      setIsClearing(true);
+      setShowMenu(false);
+      await api.delete(`/chat/conversations/${activeConversation._id}`);
+      toast.success("Conversation deleted");
+      navigate("/chat");
+      //remove recently deleted conversation from conversations list
+      setConversations((convs: Conversation[]) => {
+        const updated = convs.filter((c) => c._id !== activeConversation._id);
+        // If the deleted conversation was active, clear it
+        if (
+          activeConversation &&
+          !updated.some((c) => c._id === activeConversation._id)
+        ) {
+          setActiveConversation(null);
+        }
+        return updated;
+      });
+      setMessages([]);
+    } catch (e) {
+      toast.error("Failed to delete conversation");
     } finally {
       setIsClearing(false);
     }
@@ -170,11 +218,7 @@ export default function ChatHeader({
                 <Bot className="w-4 h-4 md:w-5 md:h-5 ml-1 text-accent flex-shrink-0" />
               )}
             </h2>
-            <p
-              className={`text-xs md:text-sm truncate ${
-                isOnline ? "text-accent" : "text-muted-foreground"
-              }`}
-            >
+            <p className="text-xs md:text-sm truncate text-muted-foreground">
               {subtitle}
             </p>
           </div>
@@ -193,17 +237,159 @@ export default function ChatHeader({
             </button>
 
             {showMenu && (
-              <div className="absolute right-0 top-full mt-2 w-48 bg-background border border-border rounded-lg shadow-lg z-50">
-                <div className="py-1">
+              <div className="absolute right-0 top-full mt-2 w-64 bg-background border border-border rounded-lg shadow-lg z-50">
+                <div className="py-2">
+                  <div className="px-4 pb-1 text-xs uppercase tracking-wide text-muted-foreground">
+                    Chat Management
+                  </div>
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      try {
+                        setShowMenu(false);
+                        await api.post(
+                          `/chat/conversations/${activeConversation._id}/pin`
+                        );
+                        toggleConversationPin(activeConversation._id);
+
+                        toast.success(
+                          `Conversation ${
+                            activeConversation.pinnedAt ? "unpinned" : "pinned"
+                          } successfully`
+                        );
+                      } catch {
+                        toast.error("Failed to update pin");
+                      }
+                    }}
+                    className="w-full px-4 py-2.5 text-left text-sm hover:bg-muted transition-colors flex items-center space-x-3"
+                  >
+                    <span className="w-4 h-4 inline-flex items-center justify-center">
+                      📌
+                    </span>
+                    <span>
+                      {activeConversation.pinnedAt
+                        ? "Unpin Conversation"
+                        : "Pin Conversation"}
+                    </span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowMenu(false);
+                      toast("Notifications muted");
+                    }}
+                    className="w-full px-4 py-2.5 text-left text-sm hover:bg-muted transition-colors flex items-center space-x-3"
+                  >
+                    <span className="w-4 h-4 inline-flex items-center justify-center">
+                      🔕
+                    </span>
+                    <span>Mute Notifications</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowMenu(false);
+                      toast("Marked as unread");
+                    }}
+                    className="w-full px-4 py-2.5 text-left text-sm hover:bg-muted transition-colors flex items-center space-x-3"
+                  >
+                    <span className="w-4 h-4 inline-flex items-center justify-center">
+                      📩
+                    </span>
+                    <span>Mark as Unread</span>
+                  </button>
+
+                  <div className="px-4 pt-3 pb-1 text-xs uppercase tracking-wide text-muted-foreground">
+                    Media & Data
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowMenu(false);
+                      window.dispatchEvent(new CustomEvent("open-view-media"));
+                    }}
+                    className="w-full px-4 py-2.5 text-left text-sm hover:bg-muted transition-colors flex items-center space-x-3"
+                  >
+                    <span className="w-4 h-4 inline-flex items-center justify-center">
+                      🖼️
+                    </span>
+                    <span>View Media & Files</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowMenu(false);
+                      toast("Export chat coming soon");
+                    }}
+                    className="w-full px-4 py-2.5 text-left text-sm hover:bg-muted transition-colors flex items-center space-x-3"
+                  >
+                    <span className="w-4 h-4 inline-flex items-center justify-center">
+                      📂
+                    </span>
+                    <span>Export Chat</span>
+                  </button>
+
+                  <div className="px-4 pt-3 pb-1 text-xs uppercase tracking-wide text-muted-foreground">
+                    Cleanup
+                  </div>
                   <button
                     type="button"
                     onClick={handleClearChat}
-                    disabled={isClearing}
-                    className="w-full px-4 py-3 text-left text-sm hover:bg-muted transition-colors flex items-center space-x-3 text-destructive hover:text-destructive disabled:opacity-50 disabled:cursor-not-allowed"
+                    disabled={isClearing || messages.length === 0}
+                    className="w-full px-4 py-2.5 text-left text-sm hover:bg-muted transition-colors flex items-center space-x-3 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    <Trash2 className="w-4 h-4" />
+                    <span className="w-4 h-4 inline-flex items-center justify-center">
+                      🧹
+                    </span>
                     <span>{isClearing ? "Clearing..." : "Clear Chat"}</span>
                   </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowMenu(false);
+                      setShowDeleteConfirm(true);
+                    }}
+                    className="w-full px-4 py-2.5 text-left text-sm hover:bg-muted transition-colors flex items-center space-x-3 text-destructive"
+                  >
+                    <span className="w-4 h-4 inline-flex items-center justify-center">
+                      🗑️
+                    </span>
+                    <span>Delete Conversation</span>
+                  </button>
+
+                  {!isAI && (
+                    <>
+                      <div className="px-4 pt-3 pb-1 text-xs uppercase tracking-wide text-muted-foreground">
+                        User Actions
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setShowMenu(false);
+                          toast("User blocked");
+                        }}
+                        className="w-full px-4 py-2.5 text-left text-sm hover:bg-muted transition-colors flex items-center space-x-3"
+                      >
+                        <span className="w-4 h-4 inline-flex items-center justify-center">
+                          🚫
+                        </span>
+                        <span>Block User</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setShowMenu(false);
+                          toast("Report submitted");
+                        }}
+                        className="w-full px-4 py-2.5 text-left text-sm hover:bg-muted transition-colors flex items-center space-x-3"
+                      >
+                        <span className="w-4 h-4 inline-flex items-center justify-center">
+                          📝
+                        </span>
+                        <span>Report User</span>
+                      </button>
+                    </>
+                  )}
                 </div>
               </div>
             )}
@@ -225,6 +411,16 @@ export default function ChatHeader({
           </div>
         </div>
       )} */}
+      {showDeleteConfirm && (
+        <ConfirmModal
+          isOpen={showDeleteConfirm}
+          onClose={() => setShowDeleteConfirm(false)}
+          onConfirm={handleDeleteConversation}
+          title="Delete Conversation"
+          description="This will permanently delete all messages in this conversation."
+          confirmText="Delete"
+        />
+      )}
     </div>
   );
 }

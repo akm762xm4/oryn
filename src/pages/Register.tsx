@@ -61,9 +61,9 @@ export default function Register() {
 
   return (
     <div className="auth-background flex items-center justify-center p-4 min-h-screen">
-      <div className="w-full max-w-md bg-background/90 backdrop-blur-sm rounded-2xl p-6 sm:p-8 shadow-2xl border border-white/10 mx-auto">
+      <div className="w-full max-w-md bg-background/90 backdrop-blur-sm rounded-2xl p-6 sm:p-8 shadow-2xl border border-white/10 mx-auto relative">
         {/* Header */}
-        <div className="text-center mb-6 sm:mb-8">
+        <div className="text-center mb-6 sm:mb-4">
           <div className="flex items-center justify-center mb-4">
             <img src="/Oryn Full.png" alt="Oryn Logo" className="h-16 w-auto" />
           </div>
@@ -76,20 +76,14 @@ export default function Register() {
         </div>
 
         {/* Theme Toggle */}
-        <div className="flex justify-end mb-4 sm:mb-6">
-          <button
-            type="button"
-            onClick={toggleTheme}
-            className="p-2.5 sm:p-2 rounded-lg bg-muted hover:bg-muted/80 transition-colors touch-manipulation"
-            aria-label="Toggle theme"
-          >
-            {isDark ? (
-              <Sun className="w-5 h-5" />
-            ) : (
-              <Moon className="w-5 h-5" />
-            )}
-          </button>
-        </div>
+        <button
+          type="button"
+          onClick={toggleTheme}
+          className="absolute top-4 right-4 p-2.5 sm:p-2 rounded-lg bg-muted hover:bg-muted/80 transition-colors touch-manipulation"
+          aria-label="Toggle theme"
+        >
+          {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+        </button>
 
         {/* Form */}
         <form

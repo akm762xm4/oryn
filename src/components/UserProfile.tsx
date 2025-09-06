@@ -75,9 +75,9 @@ export default function UserProfile({ isOpen, onClose }: UserProfileProps) {
     const file = e.target.files?.[0];
     if (!file || !user) return;
 
-    // Check file size (max 2MB)
-    if (file.size > 2 * 1024 * 1024) {
-      toast.error("Image size must be less than 2MB");
+    // Check file size (max 4MB)
+    if (file.size > 4 * 1024 * 1024) {
+      toast.error("Image size must be less than 4MB");
       return;
     }
 

@@ -62,6 +62,12 @@ export const handleConnection = (io, socket) => {
       // Emit to all participants
       io.to(conversationId).emit("newMessage", message);
 
+      // Immediately emit delivered to sender (message persisted)
+      io.to(socket.id).emit("messageDelivered", {
+        messageId: message._id.toString(),
+        deliveredAt: new Date(),
+      });
+
       // Send push notification to offline users
       const offlineParticipants = conversation.participants.filter(
         (participantId) =>
@@ -125,15 +131,12 @@ export const handleConnection = (io, socket) => {
         });
         await message.save();
 
-        // Emit read status to sender
-        const senderSocketId = connectedUsers.get(message.sender.toString());
-        if (senderSocketId) {
-          io.to(senderSocketId).emit("messageRead", {
-            messageId,
-            readBy: socket.userId,
-            readAt: new Date(),
-          });
-        }
+        // Emit read status to room (so all participants update)
+        io.to(conversationId).emit("messageRead", {
+          messageId,
+          readBy: socket.userId,
+          readAt: new Date(),
+        });
       }
     } catch (error) {
       console.error("Error marking message as read:", error);

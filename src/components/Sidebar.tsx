@@ -21,6 +21,7 @@ import NewChatModal from "./NewChatModal";
 import UserProfile from "./UserProfile";
 import LogoutConfirmModal from "./LogoutConfirmModal";
 import api from "../lib/api";
+import { usePreferencesStore } from "../stores/preferencesStore";
 import toast from "react-hot-toast";
 
 export default function Sidebar() {
@@ -30,10 +31,24 @@ export default function Sidebar() {
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const navigate = useNavigate();
   const { user, logout } = useAuthStore();
-  const { conversations, setActiveConversation, isLoadingConversations } =
-    useChatStore();
+  const {
+    conversations,
+    setConversations,
+    setActiveConversation,
+    isLoadingConversations,
+  } = useChatStore();
+  const [suggested, setSuggested] = useState<
+    { _id: string; username: string; avatar?: string }[]
+  >([]);
   const { isDark, toggleTheme } = useThemeStore();
   const [showMenu, setShowMenu] = useState(false);
+  const [showPrefs, setShowPrefs] = useState(false);
+  const {
+    soundEnabled,
+    vibrationEnabled,
+    setSoundEnabled,
+    setVibrationEnabled,
+  } = usePreferencesStore();
   const menuRef = useRef<HTMLDivElement>(null);
 
   const filteredConversations = conversations.filter((conv) => {
@@ -87,18 +102,59 @@ export default function Sidebar() {
 
       const isMobile = window.innerWidth < 768;
 
+      // Always set active conversation first so UI is ready
+      setActiveConversation(response.data);
+
       if (isMobile) {
-        // On mobile, navigate to the AI conversation
+        // Navigate immediately on mobile
         navigate(`/chat/${response.data._id}`);
-      } else {
-        // On desktop, just set active conversation
-        setActiveConversation(response.data);
       }
 
       toast.success("AI chat started!");
     } catch (error) {
       console.error("AI conversation error:", error);
       toast.error("Failed to start AI chat");
+    }
+  };
+
+  // Load suggested users (simple heuristic via search without query)
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await api.get("/chat/search/users", { params: { q: "" } });
+        const others = (res.data || [])
+          .filter((u: any) => u._id !== user?._id)
+          .slice(0, 5);
+        // eliminate who are in conversations already
+        setSuggested(
+          others.filter(
+            (u: any) =>
+              !conversations.some((c) =>
+                c.participants.find((p) => p._id === u._id)
+              )
+          )
+        );
+      } catch {
+        // ignore
+      }
+    })();
+  }, [user?._id]);
+
+  const startChatWith = async (userId: string) => {
+    try {
+      const res = await api.post("/chat/conversations", {
+        isGroup: false,
+        participantId: userId,
+      });
+      setActiveConversation(res.data);
+      setConversations((convs) => {
+        // If conversation already exists, don't add
+        if (convs.some((c) => c._id === res.data._id)) return convs;
+        return [res.data, ...convs];
+      });
+      if (window.innerWidth < 768) navigate(`/chat/${res.data._id}`);
+    } catch {
+      toast.error("Failed to start chat");
     }
   };
 
@@ -126,31 +182,110 @@ export default function Sidebar() {
               </button>
               {/* Popup Menu */}
               {showMenu && (
-                <div className="absolute right-0 top-full mt-2 w-48 bg-background border border-border rounded-lg shadow-lg z-50">
-                  <div className="py-1">
+                <div className="absolute right-0 top-full mt-2 w-64 bg-background border border-border rounded-lg shadow-lg z-50">
+                  <div className="py-2">
+                    <div className="px-4 pb-1 text-xs uppercase tracking-wide text-muted-foreground">
+                      Profile & Account
+                    </div>
                     <button
-                      onClick={() => setShowProfile(true)}
-                      className="w-full px-4 py-3 text-left text-sm hover:bg-muted transition-colors flex items-center space-x-3"
+                      onClick={() => {
+                        setShowProfile(true);
+                        setShowMenu(false);
+                      }}
+                      className="w-full px-4 py-2.5 text-left text-sm hover:bg-muted transition-colors flex items-center space-x-3"
                     >
                       <User className="w-4 h-4" />
                       <span>Profile Settings</span>
                     </button>
-
                     <button
-                      onClick={toggleTheme}
-                      className="w-full px-4 py-3 text-left text-sm hover:bg-muted transition-colors flex items-center space-x-3"
+                      onClick={() => {
+                        setShowMenu(false);
+                        toast("Privacy & Security coming soon");
+                      }}
+                      className="w-full px-4 py-2.5 text-left text-sm hover:bg-muted transition-colors flex items-center space-x-3"
+                    >
+                      <span className="w-4 h-4 inline-flex items-center justify-center">
+                        🔒
+                      </span>
+                      <span>Privacy & Security</span>
+                    </button>
+
+                    <div className="px-4 pt-3 pb-1 text-xs uppercase tracking-wide text-muted-foreground">
+                      Preferences
+                    </div>
+                    <button
+                      onClick={() => {
+                        toggleTheme();
+                        setShowMenu(false);
+                      }}
+                      className="w-full px-4 py-2.5 text-left text-sm hover:bg-muted transition-colors flex items-center space-x-3"
                     >
                       {isDark ? (
                         <Sun className="w-4 h-4" />
                       ) : (
                         <Moon className="w-4 h-4" />
                       )}
-                      <span>Toggle Theme</span>
+                      <span>Appearance</span>
+                    </button>
+                    <button
+                      onClick={() => {
+                        setShowMenu(false);
+                        setShowPrefs(true);
+                      }}
+                      className="w-full px-4 py-2.5 text-left text-sm hover:bg-muted transition-colors flex items-center space-x-3"
+                    >
+                      <span className="w-4 h-4 inline-flex items-center justify-center">
+                        🔊
+                      </span>
+                      <span>Sound & Vibration</span>
+                    </button>
+                    <button
+                      onClick={() => {
+                        setShowMenu(false);
+                        toast("Notification settings coming soon");
+                      }}
+                      className="w-full px-4 py-2.5 text-left text-sm hover:bg-muted transition-colors flex items-center space-x-3"
+                    >
+                      <span className="w-4 h-4 inline-flex items-center justify-center">
+                        🔔
+                      </span>
+                      <span>Notification Settings</span>
                     </button>
 
+                    <div className="px-4 pt-3 pb-1 text-xs uppercase tracking-wide text-muted-foreground">
+                      Support
+                    </div>
+                    <button
+                      onClick={() => {
+                        setShowMenu(false);
+                        toast("Help & Support coming soon");
+                      }}
+                      className="w-full px-4 py-2.5 text-left text-sm hover:bg-muted transition-colors flex items-center space-x-3"
+                    >
+                      <span className="w-4 h-4 inline-flex items-center justify-center">
+                        ❓
+                      </span>
+                      <span>Help & Support</span>
+                    </button>
+                    <button
+                      onClick={() => {
+                        setShowMenu(false);
+                        toast("Oryn v1.0.0");
+                      }}
+                      className="w-full px-4 py-2.5 text-left text-sm hover:bg-muted transition-colors flex items-center space-x-3"
+                    >
+                      <span className="w-4 h-4 inline-flex items-center justify-center">
+                        ℹ️
+                      </span>
+                      <span>About Oryn</span>
+                    </button>
+
+                    <div className="px-4 pt-3 pb-1 text-xs uppercase tracking-wide text-muted-foreground">
+                      Danger Zone
+                    </div>
                     <button
                       onClick={() => setShowLogoutConfirm(true)}
-                      className="w-full px-4 py-3 text-left text-sm hover:bg-muted transition-colors flex items-center space-x-3 text-destructive"
+                      className="w-full px-4 py-2.5 text-left text-sm hover:bg-muted transition-colors flex items-center space-x-3 text-destructive"
                     >
                       <LogOut className="w-4 h-4" />
                       <span>Logout</span>
@@ -212,7 +347,41 @@ export default function Sidebar() {
         {isLoadingConversations ? (
           <ConversationSkeleton />
         ) : (
-          <ConversationList conversations={filteredConversations} />
+          <>
+            <ConversationList conversations={filteredConversations} />
+            {/* Suggested users */}
+            {suggested.length > 0 && (
+              <div className="mt-4 p-4 border-t">
+                <div className="text-xs uppercase tracking-wide text-muted-foreground mb-2">
+                  Suggested
+                </div>
+                <div className="flex flex-col gap-2">
+                  {suggested.map((s) => (
+                    <button
+                      key={s._id}
+                      onClick={() => startChatWith(s._id)}
+                      className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted text-left"
+                    >
+                      <div className="w-8 h-8 rounded-full overflow-hidden bg-primary flex items-center justify-center text-white">
+                        {s.avatar ? (
+                          <img
+                            src={s.avatar}
+                            alt={s.username}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <span className="text-sm font-medium">
+                            {s.username.charAt(0).toUpperCase()}
+                          </span>
+                        )}
+                      </div>
+                      <div className="truncate text-sm">{s.username}</div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </>
         )}
       </div>
 
@@ -268,6 +437,46 @@ export default function Sidebar() {
           onClose={() => setShowLogoutConfirm(false)}
           onConfirm={handleLogout}
         />
+      )}
+
+      {showPrefs && (
+        <div
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+          onClick={() => setShowPrefs(false)}
+        >
+          <div
+            className="bg-background rounded-2xl w-full max-w-md p-6 border border-border"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="text-lg font-semibold mb-4">Sound & Vibration</h3>
+            <div className="space-y-4">
+              <label className="flex items-center justify-between">
+                <span className="text-sm">Sound effects</span>
+                <input
+                  type="checkbox"
+                  checked={soundEnabled}
+                  onChange={(e) => setSoundEnabled(e.target.checked)}
+                />
+              </label>
+              <label className="flex items-center justify-between">
+                <span className="text-sm">Vibration / Haptics</span>
+                <input
+                  type="checkbox"
+                  checked={vibrationEnabled}
+                  onChange={(e) => setVibrationEnabled(e.target.checked)}
+                />
+              </label>
+            </div>
+            <div className="mt-6 flex justify-end gap-2">
+              <button
+                className="px-4 py-2 rounded-lg bg-muted"
+                onClick={() => setShowPrefs(false)}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

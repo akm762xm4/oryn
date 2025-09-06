@@ -10,6 +10,7 @@ import { useThemeStore } from "../stores/themeStore";
 interface LoginForm {
   email: string;
   password: string;
+  remember?: boolean;
 }
 
 export default function Login() {
@@ -32,7 +33,8 @@ export default function Login() {
 
       const { token, user } = response.data;
 
-      login(token, user);
+      const remember = data.remember ?? true;
+      login(token, user, remember);
       toast.success("Login successful!");
       navigate("/chat");
     } catch (error) {
@@ -49,9 +51,9 @@ export default function Login() {
 
   return (
     <div className="auth-background flex items-center justify-center p-4 min-h-screen">
-      <div className="w-full max-w-md bg-background/90 backdrop-blur-sm rounded-2xl p-6 sm:p-8 shadow-2xl border border-white/10 mx-auto">
+      <div className="w-full max-w-md bg-background/90 backdrop-blur-sm rounded-2xl p-6 sm:p-8 shadow-2xl border border-white/10 mx-auto relative">
         {/* Header */}
-        <div className="text-center mb-6 sm:mb-8">
+        <div className="text-center mb-6 sm:mb-6">
           <div className="flex items-center justify-center mb-4">
             <img src="/Oryn Full.png" alt="Oryn Logo" className="h-16 w-auto" />
           </div>
@@ -64,23 +66,14 @@ export default function Login() {
         </div>
 
         {/* Theme Toggle */}
-        <div className="flex justify-between items-center mb-4 sm:mb-6">
-          <div className="text-xs text-muted-foreground">
-            Theme: {isDark ? "Dark" : "Light"}
-          </div>
-          <button
-            type="button"
-            onClick={toggleTheme}
-            className="p-2.5 sm:p-2 rounded-lg bg-muted hover:bg-muted/80 transition-colors touch-manipulation"
-            aria-label="Toggle theme"
-          >
-            {isDark ? (
-              <Sun className="w-5 h-5" />
-            ) : (
-              <Moon className="w-5 h-5" />
-            )}
-          </button>
-        </div>
+        <button
+          type="button"
+          onClick={toggleTheme}
+          className="absolute top-4 right-4  p-2.5 sm:p-2 rounded-lg bg-muted hover:bg-muted/80 transition-colors touch-manipulation"
+          aria-label="Toggle theme"
+        >
+          {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+        </button>
 
         {/* Form */}
         <form
@@ -149,6 +142,11 @@ export default function Login() {
               </p>
             )}
           </div>
+
+          <label className="flex items-center gap-2 text-sm">
+            <input type="checkbox" defaultChecked {...register("remember")} />
+            <span>Remember me</span>
+          </label>
 
           <button
             type="submit"

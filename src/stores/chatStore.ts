@@ -8,9 +8,41 @@ export const useChatStore = create<ChatState>((set) => ({
   onlineUsers: new Set(),
   typingUsers: new Map(),
   isLoadingConversations: false,
+  aiGenerating: false,
+  unreadCounts: {},
   // isLoadingMessages: false,
 
-  setConversations: (conversations) => set({ conversations }),
+  setConversations: (conversationsOrUpdater) =>
+    set((state) => {
+      const conversations =
+        typeof conversationsOrUpdater === "function"
+          ? conversationsOrUpdater(state.conversations)
+          : conversationsOrUpdater;
+      return { conversations };
+    }),
+
+  toggleConversationPin: (conversationId) =>
+    set((state) => {
+      const updatedConversations = state.conversations.map((conv) =>
+        conv._id === conversationId
+          ? {
+              ...conv,
+              pinnedAt: conv.pinnedAt ? null : new Date(),
+            }
+          : conv
+      );
+      let updatedActiveConversation = state.activeConversation;
+      if (state.activeConversation?._id === conversationId) {
+        const found = updatedConversations.find(
+          (conv) => conv._id === conversationId
+        );
+        if (found) updatedActiveConversation = found;
+      }
+      return {
+        conversations: updatedConversations,
+        activeConversation: updatedActiveConversation,
+      };
+    }),
 
   setLoadingConversations: (isLoading: boolean) =>
     set({ isLoadingConversations: isLoading }),
@@ -41,6 +73,15 @@ export const useChatStore = create<ChatState>((set) => ({
           ? { ...conv, lastMessage: message, updatedAt: new Date() }
           : conv
       ),
+      unreadCounts:
+        state.activeConversation &&
+        state.activeConversation._id === message.conversation
+          ? { ...state.unreadCounts, [message.conversation]: 0 }
+          : {
+              ...state.unreadCounts,
+              [message.conversation]:
+                (state.unreadCounts[message.conversation] || 0) + 1,
+            },
     })),
 
   updateMessage: (messageId, updates) =>
@@ -92,4 +133,20 @@ export const useChatStore = create<ChatState>((set) => ({
         ),
       })),
     })),
+
+  incrementUnread: (conversationId) =>
+    set((state) => ({
+      unreadCounts: {
+        ...state.unreadCounts,
+        [conversationId]: (state.unreadCounts[conversationId] || 0) + 1,
+      },
+    })),
+
+  clearUnread: (conversationId) =>
+    set((state) => ({
+      unreadCounts: { ...state.unreadCounts, [conversationId]: 0 },
+    })),
+
+  setAiGenerating: (isGenerating: boolean) =>
+    set({ aiGenerating: isGenerating }),
 }));

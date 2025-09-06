@@ -2,6 +2,7 @@ import jwt from "jsonwebtoken";
 import User from "../models/User.js";
 import { sendOTP } from "../utils/email.js";
 import cloudinary from "../config/cloudinary.js";
+import sharp from "sharp";
 
 const generateToken = (userId) => {
   return jwt.sign({ userId }, process.env.JWT_SECRET, { expiresIn: "7d" });
@@ -233,19 +234,41 @@ export const uploadAvatar = async (req, res) => {
       }
     }
 
-    // Upload new avatar to Cloudinary
-    const result = await cloudinary.uploader.upload(req.file.path, {
-      folder: "avatars",
-      width: 200,
-      height: 200,
-      crop: "fill",
-      quality: "auto",
-      format: "webp",
-    });
+    // Compress and optimize image before uploading to Cloudinary
+    const compressedImageBuffer = await sharp(req.file.path)
+      .resize(400, 400, {
+        fit: "cover",
+        position: "center",
+      })
+      .jpeg({
+        quality: 85,
+        progressive: true,
+      })
+      .toBuffer();
+
+    // Upload compressed image to Cloudinary
+    const result = await cloudinary.uploader.upload(
+      `data:image/jpeg;base64,${compressedImageBuffer.toString("base64")}`,
+      {
+        folder: "avatars",
+        width: 200,
+        height: 200,
+        crop: "fill",
+        quality: "auto",
+        format: "webp",
+      }
+    );
 
     // Update user avatar in database
     user.avatar = result.secure_url;
     await user.save();
+
+    // Clean up temporary file
+    try {
+      fs.unlinkSync(req.file.path);
+    } catch (error) {
+      console.log("Error deleting temporary file:", error);
+    }
 
     // Emit real-time avatar update to all connected clients
     const io = req.app.get("io");

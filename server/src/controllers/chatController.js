@@ -342,20 +342,24 @@ export const sendMessage = async (req, res) => {
 
 export const searchUsers = async (req, res) => {
   try {
-    const { query } = req.query;
+    const q = (req.query.q ?? req.query.query ?? "").toString();
+
+    const baseFilter = { _id: { $ne: req.user._id } };
+    const textFilter = q
+      ? {
+          $or: [
+            { username: { $regex: q, $options: "i" } },
+            { email: { $regex: q, $options: "i" } },
+          ],
+        }
+      : {};
 
     const users = await User.find({
-      $and: [
-        { _id: { $ne: req.user._id } },
-        {
-          $or: [
-            { username: { $regex: query, $options: "i" } },
-            { email: { $regex: query, $options: "i" } },
-          ],
-        },
-      ],
+      ...baseFilter,
+      ...textFilter,
     })
       .select("username email avatar isOnline lastSeen")
+      .sort(q ? { username: 1 } : { isOnline: -1, lastSeen: -1 })
       .limit(10);
 
     res.json(users);
@@ -525,6 +529,42 @@ export const clearMessages = async (req, res) => {
   }
 };
 
+// Delete a conversation
+export const deleteConversation = async (req, res) => {
+  try {
+    const { conversationId } = req.params;
+
+    const conversation = await Conversation.findById(conversationId);
+    if (!conversation || !conversation.participants.includes(req.user._id)) {
+      return res.status(404).json({ message: "Conversation not found" });
+    }
+
+    await Message.deleteMany({ conversation: conversationId });
+    await Conversation.findByIdAndDelete(conversationId);
+
+    res.json({ message: "Conversation deleted" });
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
+// Toggle pin conversation
+export const togglePinConversation = async (req, res) => {
+  try {
+    const { conversationId } = req.params;
+    const conversation = await Conversation.findById(conversationId);
+    if (!conversation || !conversation.participants.includes(req.user._id)) {
+      return res.status(404).json({ message: "Conversation not found" });
+    }
+
+    conversation.pinnedAt = conversation.pinnedAt ? null : new Date();
+    await conversation.save();
+
+    res.json({ message: "Pin updated", pinnedAt: conversation.pinnedAt });
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
 // Fix conversations with duplicate participants
 export const fixDuplicateConversations = async (req, res) => {
   try {

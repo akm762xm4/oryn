@@ -33,6 +33,7 @@ export interface Conversation {
   groupAvatar?: string;
   admin?: string;
   lastMessage?: Message;
+  pinnedAt?: Date | null;
   updatedAt: Date;
   createdAt: Date;
 }
@@ -41,7 +42,7 @@ export interface AuthState {
   user: User | null;
   token: string | null;
   isAuthenticated: boolean;
-  login: (token: string, user: User) => void;
+  login: (token: string, user: User, remember?: boolean) => void;
   logout: () => void;
   updateUser: (updatedUser: Partial<User>) => void;
 }
@@ -53,8 +54,15 @@ export interface ChatState {
   onlineUsers: Set<string>;
   typingUsers: Map<string, string>;
   isLoadingConversations: boolean;
+  aiGenerating: boolean;
+  unreadCounts: Record<string, number>;
   // isLoadingMessages: boolean;
-  setConversations: (conversations: Conversation[]) => void;
+  setConversations: (
+    conversationsOrUpdater:
+      | Conversation[]
+      | ((conversations: Conversation[]) => Conversation[])
+  ) => void;
+  toggleConversationPin: (conversationId: string) => void;
   setActiveConversation: (conversation: Conversation | null) => void;
   setMessages: (messages: Message[] | ((prev: Message[]) => Message[])) => void;
   addMessage: (message: Message) => void;
@@ -69,5 +77,8 @@ export interface ChatState {
   removeUserTyping: (conversationId: string, userId: string) => void;
   updateUserInMessages: (userId: string, updates: Partial<User>) => void;
   setLoadingConversations: (isLoading: boolean) => void;
+  setAiGenerating: (isGenerating: boolean) => void;
+  incrementUnread: (conversationId: string) => void;
+  clearUnread: (conversationId: string) => void;
   // setLoadingMessages: (isLoading: boolean) => void;
 }

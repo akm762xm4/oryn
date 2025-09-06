@@ -25,8 +25,13 @@ const MessageList = memo(function MessageList() {
   const typingRef = useRef<HTMLDivElement | null>(null);
 
   const { user } = useAuthStore();
-  const { activeConversation, messages, setMessages, typingUsers } =
-    useChatStore();
+  const {
+    activeConversation,
+    messages,
+    setMessages,
+    typingUsers,
+    aiGenerating,
+  } = useChatStore();
 
   const loadMessages = useCallback(
     async (pageNum = 1) => {
@@ -126,6 +131,20 @@ const MessageList = memo(function MessageList() {
       }
     };
   }, [activeConversation?._id]); // Only depend on conversation ID
+
+  // Mark recent messages as read on view
+  useEffect(() => {
+    if (!activeConversation) return;
+    const unread = messages.filter(
+      (m) =>
+        m.sender._id !== user?._id &&
+        !(m.readBy || []).some((r) => r.user === (user?._id || ""))
+    );
+    // Limit to last few to avoid spam
+    unread.slice(-10).forEach((m) => {
+      socketService.markAsRead(activeConversation._id, m._id);
+    });
+  }, [activeConversation?._id, messages.length]);
 
   // Auto-scroll when typing indicator appears (if at bottom)
   useEffect(() => {
@@ -237,6 +256,27 @@ const MessageList = memo(function MessageList() {
     return <MessageListSkeleton />;
   }
 
+  // Empty state
+  if (messages.length === 0 && !isInitialLoading) {
+    return (
+      <div className="flex flex-1 items-center justify-center p-8">
+        <div className="text-center max-w-md ">
+          <img
+            className="w-[80%] mx-auto"
+            src="/EmptyMsgState.png"
+            alt="Empty Message State"
+          />
+          <h3 className="text-xl font-semibold text-foreground mb-2">
+            No messages yet
+          </h3>
+          <p className="text-muted-foreground">
+            Say hello to start the conversation. Your messages will appear here.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div
       ref={messagesContainerRef}
@@ -286,6 +326,20 @@ const MessageList = memo(function MessageList() {
           </div>
         );
       })}
+
+      {/* AI generating indicator */}
+      {aiGenerating && (
+        <div className="flex items-center space-x-3 mb-2">
+          <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
+            <div className="w-3 h-3 bg-muted-foreground/50 rounded-full animate-pulse" />
+          </div>
+          <div className="bg-muted px-4 py-2 rounded-2xl">
+            <p className="text-sm text-muted-foreground italic">
+              AI is thinking...
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Typing indicator */}
       <div ref={typingRef}>

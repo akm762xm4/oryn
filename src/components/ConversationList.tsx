@@ -4,7 +4,7 @@ import { formatDistanceToNow } from "date-fns";
 import { useAuthStore } from "../stores/authStore";
 import { useChatStore } from "../stores/chatStore";
 import type { Conversation } from "../types";
-import { Bot, Users } from "lucide-react";
+import { Bot, Pin, Users } from "lucide-react";
 
 interface ConversationListProps {
   conversations: Conversation[];
@@ -15,8 +15,13 @@ const ConversationList = memo(function ConversationList({
 }: ConversationListProps) {
   const navigate = useNavigate();
   const { user } = useAuthStore();
-  const { activeConversation, setActiveConversation, onlineUsers } =
-    useChatStore();
+  const {
+    activeConversation,
+    setActiveConversation,
+    onlineUsers,
+    unreadCounts,
+    clearUnread,
+  } = useChatStore();
 
   const handleConversationClick = (conversation: Conversation) => {
     const isMobile = window.innerWidth < 768;
@@ -32,6 +37,9 @@ const ConversationList = memo(function ConversationList({
         setActiveConversation(conversation);
       }
     }
+
+    // Clear unread on open
+    clearUnread(conversation._id);
   };
 
   const getConversationInfo = useCallback(
@@ -94,7 +102,7 @@ const ConversationList = memo(function ConversationList({
 
   if (conversations.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center h-full p-8 md:p-8 px-6 text-center">
+      <div className="flex flex-col items-center justify-center p-8 md:p-8 px-6 text-center">
         <div className="w-20 h-20 md:w-16 md:h-16 bg-muted rounded-full flex items-center justify-center mb-6 md:mb-4">
           <Users className="w-10 h-10 md:w-8 md:h-8 text-muted-foreground" />
         </div>
@@ -108,9 +116,23 @@ const ConversationList = memo(function ConversationList({
     );
   }
 
+  // Sort: pinned first by pinnedAt desc, then by updatedAt desc
+  const sortedConversations = [...conversations].sort((a, b) => {
+    const aPinned = a.pinnedAt ? 1 : 0;
+    const bPinned = b.pinnedAt ? 1 : 0;
+    if (aPinned !== bPinned) return bPinned - aPinned;
+    const aTime = (
+      a.pinnedAt ? new Date(a.pinnedAt) : new Date(a.updatedAt)
+    ).getTime();
+    const bTime = (
+      b.pinnedAt ? new Date(b.pinnedAt) : new Date(b.updatedAt)
+    ).getTime();
+    return bTime - aTime;
+  });
+
   return (
     <div className="space-y-2 md:space-y-1 p-4 md:p-2">
-      {conversations.map((conversation) => {
+      {sortedConversations.map((conversation) => {
         const { name, avatar, isOnline, isAI } =
           getConversationInfo(conversation);
         const isActive = activeConversation?._id === conversation._id;
@@ -120,12 +142,18 @@ const ConversationList = memo(function ConversationList({
             key={conversation._id}
             type="button"
             onClick={() => handleConversationClick(conversation)}
-            className={`w-full p-4 md:p-3 rounded-xl md:rounded-lg text-left transition-colors touch-manipulation ${
+            className={`z-0 relative w-full p-4 md:p-3 rounded-xl md:rounded-lg text-left transition-colors touch-manipulation ${
               isActive
                 ? "bg-primary text-white shadow-md"
                 : "hover:bg-muted active:bg-muted/80"
-            }`}
+            } ${conversation.pinnedAt ? "border" : ""}`}
           >
+            <Pin
+              fill="currentColor"
+              className={`z-10 rotate-30 absolute -top-1 -right-1 w-5 h-5 text-yellow-500  ${
+                conversation.pinnedAt ? "opacity-100" : "opacity-0"
+              }`}
+            />
             <div className="flex items-center space-x-4 md:space-x-3">
               {/* Avatar */}
               <div className="relative">
@@ -184,7 +212,7 @@ const ConversationList = memo(function ConversationList({
                   {conversation.lastMessage && (
                     <span
                       className={`text-sm md:text-xs font-medium md:font-normal ${
-                        isActive ? "text-white/70" : "text-muted-foreground"
+                        isActive ? "text-muted" : "text-muted-foreground"
                       }`}
                     >
                       {formatTime(conversation.updatedAt)}
@@ -194,10 +222,20 @@ const ConversationList = memo(function ConversationList({
 
                 <p
                   className={`text-sm md:text-sm truncate leading-relaxed ${
-                    isActive ? "text-white/80" : "text-muted-foreground"
+                    isActive ? "text-muted" : "text-muted-foreground"
                   }`}
                 >
                   {formatLastMessage(conversation)}
+                  {unreadCounts[conversation._id] > 0 && (
+                    <span
+                      className={`${
+                        isActive ? "text-muted" : "text-foreground"
+                      } font-medium`}
+                    >
+                      {" "}
+                      ({unreadCounts[conversation._id]})
+                    </span>
+                  )}
                 </p>
               </div>
             </div>

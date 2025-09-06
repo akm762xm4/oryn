@@ -17,7 +17,7 @@ const router = express.Router();
 const upload = multer({
   dest: "uploads/",
   limits: {
-    fileSize: 2 * 1024 * 1024, // 2MB limit
+    fileSize: 4 * 1024 * 1024, // 4MB limit
   },
   fileFilter: (req, file, cb) => {
     if (file.mimetype.startsWith("image/")) {
