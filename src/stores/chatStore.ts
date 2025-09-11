@@ -5,6 +5,7 @@ export const useChatStore = create<ChatState>((set) => ({
   conversations: [],
   activeConversation: null,
   messages: [],
+  replyTo: null as any,
   onlineUsers: new Set(),
   typingUsers: new Map(),
   isLoadingConversations: false,
@@ -65,15 +66,23 @@ export const useChatStore = create<ChatState>((set) => ({
           : messagesOrUpdater,
     })),
 
+  setReplyTo: (message) => set({ replyTo: message }),
+  clearReplyTo: () => set({ replyTo: null }),
+
   addMessage: (message) =>
-    set((state) => ({
-      messages: [...state.messages, message],
-      conversations: state.conversations.map((conv) =>
+    set((state) => {
+      const exists = state.messages.some((m) => m._id === message._id);
+      const nextMessages = exists
+        ? state.messages.map((m) => (m._id === message._id ? message : m))
+        : [...state.messages, message];
+
+      const nextConversations = state.conversations.map((conv) =>
         conv._id === message.conversation
-          ? { ...conv, lastMessage: message, updatedAt: new Date() }
+          ? { ...conv, lastMessage: message, updatedAt: new Date() as any }
           : conv
-      ),
-      unreadCounts:
+      );
+
+      const nextUnread =
         state.activeConversation &&
         state.activeConversation._id === message.conversation
           ? { ...state.unreadCounts, [message.conversation]: 0 }
@@ -81,8 +90,14 @@ export const useChatStore = create<ChatState>((set) => ({
               ...state.unreadCounts,
               [message.conversation]:
                 (state.unreadCounts[message.conversation] || 0) + 1,
-            },
-    })),
+            };
+
+      return {
+        messages: nextMessages,
+        conversations: nextConversations,
+        unreadCounts: nextUnread,
+      };
+    }),
 
   updateMessage: (messageId, updates) =>
     set((state) => ({

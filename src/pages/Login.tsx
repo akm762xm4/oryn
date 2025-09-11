@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
-import { Eye, EyeOff, Moon, Sun } from "lucide-react";
+import { Eye, EyeOff, Lock, Mail, Moon, Sun } from "lucide-react";
+import { Button, Input } from "../components/ui";
 import toast from "react-hot-toast";
 import api from "../lib/api";
 import { useAuthStore } from "../stores/authStore";
@@ -66,67 +67,57 @@ export default function Login() {
         </div>
 
         {/* Theme Toggle */}
-        <button
-          type="button"
+        <Button
+          variant="ghost"
+          size="sm"
           onClick={toggleTheme}
-          className="absolute top-4 right-4  p-2.5 sm:p-2 rounded-lg bg-muted hover:bg-muted/80 transition-colors touch-manipulation"
+          className="absolute top-4 right-4 p-2 bg-muted hover:bg-muted/80"
           aria-label="Toggle theme"
         >
           {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-        </button>
+        </Button>
 
         {/* Form */}
         <form
           onSubmit={handleSubmit(onSubmit)}
           className="space-y-5 sm:space-y-6"
         >
-          <div>
-            <label className="block text-sm font-medium text-foreground mb-2">
-              Email
-            </label>
-            <input
-              type="email"
-              {...register("email", {
-                required: "Email is required",
-                pattern: {
-                  value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                  message: "Invalid email address",
-                },
-              })}
-              className="w-full px-4 py-3.5 sm:py-3 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-base sm:text-sm"
-              placeholder="Enter your email"
-              autoComplete="email"
-              inputMode="email"
-            />
-            {errors.email && (
-              <p className="text-destructive text-sm mt-1">
-                {errors.email.message}
-              </p>
-            )}
-          </div>
+          <Input
+            label="Email"
+            type="email"
+            {...register("email", {
+              required: "Email is required",
+              pattern: {
+                value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+                message: "Invalid email address",
+              },
+            })}
+            leftIcon={<Mail className="w-4 h-4 " />}
+            placeholder="Enter your email"
+            autoComplete="email"
+            error={errors.email?.message}
+            className="py-3.5 sm:py-3 text-base sm:text-sm"
+          />
 
-          <div>
-            <label className="block text-sm font-medium text-foreground mb-2">
-              Password
-            </label>
-            <div className="relative">
-              <input
-                type={showPassword ? "text" : "password"}
-                {...register("password", {
-                  required: "Password is required",
-                  minLength: {
-                    value: 6,
-                    message: "Password must be at least 6 characters",
-                  },
-                })}
-                className="w-full px-4 py-3.5 sm:py-3 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent pr-12 text-base sm:text-sm"
-                placeholder="Enter your password"
-                autoComplete="current-password"
-              />
+          <Input
+            label="Password"
+            type={showPassword ? "text" : "password"}
+            {...register("password", {
+              required: "Password is required",
+              minLength: {
+                value: 6,
+                message: "Password must be at least 6 characters",
+              },
+            })}
+            placeholder="Enter your password"
+            autoComplete="current-password"
+            error={errors.password?.message}
+            leftIcon={<Lock className="w-4 h-4 " />}
+            rightIcon={
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground p-1 touch-manipulation"
+                className="text-muted-foreground hover:text-foreground p-1"
                 aria-label={showPassword ? "Hide password" : "Show password"}
               >
                 {showPassword ? (
@@ -135,26 +126,27 @@ export default function Login() {
                   <Eye className="w-5 h-5" />
                 )}
               </button>
-            </div>
-            {errors.password && (
-              <p className="text-destructive text-sm mt-1">
-                {errors.password.message}
-              </p>
-            )}
-          </div>
+            }
+            className="py-3.5 sm:py-3 text-base sm:text-sm"
+          />
 
           <label className="flex items-center gap-2 text-sm">
-            <input type="checkbox" defaultChecked {...register("remember")} />
+            <input
+              type="checkbox"
+              className="h-4 w-4"
+              defaultChecked
+              {...register("remember")}
+            />
             <span>Remember me</span>
           </label>
 
-          <button
+          <Button
             type="submit"
-            disabled={isLoading}
-            className="w-full bg-primary text-white py-3.5 sm:py-3 rounded-lg font-medium hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors touch-manipulation text-base sm:text-sm"
+            isLoading={isLoading}
+            className="w-full py-3.5 sm:py-3 text-base sm:text-sm"
           >
-            {isLoading ? "Signing in..." : "Sign In"}
-          </button>
+            Sign In
+          </Button>
         </form>
 
         {/* Footer */}

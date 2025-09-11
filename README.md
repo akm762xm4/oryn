@@ -1,6 +1,8 @@
 # Oryn - MERN Stack Realtime Chat App
 
-A modern, feature-rich chat application built with the MERN stack (MongoDB, Express.js, React, Node.js) and Socket.io for real-time communication.
+A modern, fast, and polished real‑time chat built with MERN + Socket.io.
+Beautiful UI, mobile‑first UX, and practical features like media, groups,
+AI assistant, export, and granular preferences.
 
 ## 🚀 Features
 
@@ -24,6 +26,21 @@ A modern, feature-rich chat application built with the MERN stack (MongoDB, Expr
 - **Dark/Light Mode** - Toggle between themes
 - **Responsive Design** - Works on all devices
 - **Smooth Animations** - Polished user experience
+
+## ✨ What’s New
+
+- Theme packs: 5 curated gradient themes with grain effect + themed bubbles
+- Background picker with 2‑column responsive layout
+- Full‑screen media viewer (+ close controls) and media modal close button
+- Export chat (JSON download)
+- About modal with quick links (README, Vercel, Render, License)
+- Group info modal with member list and rename (real‑time update)
+- Reply to messages (reply header + content) and quick reactions (👍 ❤️)
+- Unseen message sync: unread badges update in real time across sessions
+- Settings: Appearance toggle, Sound/Vibration switches
+- Change password modal (server endpoint wired)
+- Profile picture: rotate/toggle fit (auto‑orient on upload)
+- Suggested users exclude existing conversations
 
 ## 🛠️ Tech Stack
 

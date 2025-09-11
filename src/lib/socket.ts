@@ -56,8 +56,13 @@ class SocketService {
     content: string;
     messageType?: string;
     imageUrl?: string;
+    replyTo?: string;
   }) {
     this.socket?.emit("sendMessage", data);
+  }
+
+  toggleReaction(messageId: string, emoji: string) {
+    this.socket?.emit("toggleReaction", { messageId, emoji });
   }
 
   joinConversation(conversationId: string) {
@@ -95,6 +100,15 @@ class SocketService {
     this.socket?.on("messageRead", callback);
   }
 
+  onReactionUpdated(
+    callback: (data: {
+      messageId: string;
+      reactions: Array<{ emoji: string; users: string[] }>;
+    }) => void
+  ) {
+    this.socket?.on("reactionUpdated", callback);
+  }
+
   // Event listeners
   onNewMessage(callback: (message: unknown) => void) {
     this.socket?.on("newMessage", callback);
@@ -126,6 +140,21 @@ class SocketService {
 
   onError(callback: (error: { message: string }) => void) {
     this.socket?.on("error", callback);
+  }
+
+  // Conversation events
+  onConversationAdded(callback: (conversation: unknown) => void) {
+    this.socket?.on("conversationAdded", callback);
+  }
+
+  onConversationClearedUnread(
+    callback: (data: { conversationId: string }) => void
+  ) {
+    this.socket?.on("conversationClearedUnread", callback);
+  }
+
+  onConversationUpdated(callback: (conversation: unknown) => void) {
+    this.socket?.on("conversationUpdated", callback);
   }
 
   // Profile update listeners

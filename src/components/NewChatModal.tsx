@@ -1,7 +1,15 @@
 import { useState, useEffect, useCallback } from "react";
-import { X, Search, Users, User } from "lucide-react";
+import { Search, Users, User } from "lucide-react";
 import { useAuthStore } from "../stores/authStore";
 import { useChatStore } from "../stores/chatStore";
+import {
+  Modal,
+  Button,
+  Input,
+  Avatar,
+  LoadingSpinner,
+  SelectedUserTag,
+} from "./ui";
 import api from "../lib/api";
 import toast from "react-hot-toast";
 
@@ -27,7 +35,7 @@ export default function NewChatModal({ isOpen, onClose }: NewChatModalProps) {
   const [groupName, setGroupName] = useState("");
   const [isCreating, setIsCreating] = useState(false);
 
-  useAuthStore();
+  const { user } = useAuthStore();
   const { setActiveConversation, conversations, setConversations } =
     useChatStore();
 
@@ -57,10 +65,19 @@ export default function NewChatModal({ isOpen, onClose }: NewChatModalProps) {
       if (isSelected) {
         return prev.filter((u) => u._id !== selectedUser._id);
       } else {
+        // If not a group chat, selecting a user should replace selection (single select)
+        if (!isGroup) return [selectedUser];
         return [...prev, selectedUser];
       }
     });
   };
+
+  // When switching from group to direct, ensure only one user remains selected
+  useEffect(() => {
+    if (!isGroup && selectedUsers.length > 1) {
+      setSelectedUsers((prev) => (prev.length > 0 ? [prev[0]] : []));
+    }
+  }, [isGroup]);
 
   const handleCreateConversation = async () => {
     if (selectedUsers.length === 0) {
@@ -74,6 +91,49 @@ export default function NewChatModal({ isOpen, onClose }: NewChatModalProps) {
     }
 
     setIsCreating(true);
+    // Check if a conversation already exists to avoid duplicates
+    try {
+      if (!isGroup) {
+        const targetId = selectedUsers[0]._id;
+        const existing = conversations.find(
+          (c) =>
+            !c.isGroup &&
+            c.participants.some((p) => p._id === targetId) &&
+            c.participants.some((p) => p._id === user?._id)
+        );
+
+        if (existing) {
+          setActiveConversation(existing);
+          toast.success("Opened existing chat");
+          onClose();
+          setIsCreating(false);
+          return;
+        }
+      } else {
+        // group: match by participant set (including current user)
+        const selectedIds = new Set(selectedUsers.map((u) => u._id));
+        const existingGroup = conversations.find((c) => {
+          if (!c.isGroup) return false;
+          // participants should include the selected users and the current user
+          const participantIds = c.participants.map((p) => p._id);
+          if (!user?._id) return false;
+          if (!participantIds.includes(user._id)) return false;
+          if (participantIds.length !== selectedIds.size + 1) return false;
+          return [...selectedIds].every((id) => participantIds.includes(id));
+        });
+
+        if (existingGroup) {
+          setActiveConversation(existingGroup);
+          toast.success("Opened existing group chat");
+          onClose();
+          setIsCreating(false);
+          return;
+        }
+      }
+    } catch (e) {
+      // detection failed, continue to create
+      console.error("Conversation detection error", e);
+    }
     try {
       const response = await api.post("/chat/conversations", {
         participantId: isGroup
@@ -110,27 +170,21 @@ export default function NewChatModal({ isOpen, onClose }: NewChatModalProps) {
     onClose();
   };
 
-  if (!isOpen) return null;
-
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-background rounded-lg w-full max-w-md max-h-[80vh] flex flex-col">
-        {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-border">
-          <h2 className="text-lg font-semibold text-foreground">New Chat</h2>
-          <button
-            title="close"
-            onClick={handleClose}
-            className="p-1 rounded-lg hover:bg-muted transition-colors"
-          >
-            <X className="w-5 h-5" />
-          </button>
-        </div>
-
+    <Modal
+      isOpen={isOpen}
+      onClose={handleClose}
+      title="New Chat"
+      size="md"
+      className="max-h-[80vh] flex flex-col"
+    >
+      <div className="flex flex-col h-full">
         {/* Chat type toggle */}
         <div className="p-4 border-b border-border">
           <div className="flex space-x-2">
-            <button
+            <Button
+              type="button"
+              variant={!isGroup ? "primary" : "ghost"}
               onClick={() => setIsGroup(false)}
               className={`flex-1 flex items-center justify-center space-x-2 py-2 px-4 rounded-lg transition-colors ${
                 !isGroup
@@ -140,8 +194,10 @@ export default function NewChatModal({ isOpen, onClose }: NewChatModalProps) {
             >
               <User className="w-4 h-4" />
               <span>Direct Chat</span>
-            </button>
-            <button
+            </Button>
+            <Button
+              type="button"
+              variant={isGroup ? "primary" : "ghost"}
               onClick={() => setIsGroup(true)}
               className={`flex-1 flex items-center justify-center space-x-2 py-2 px-4 rounded-lg transition-colors ${
                 isGroup
@@ -151,35 +207,31 @@ export default function NewChatModal({ isOpen, onClose }: NewChatModalProps) {
             >
               <Users className="w-4 h-4" />
               <span>Group Chat</span>
-            </button>
+            </Button>
           </div>
         </div>
 
         {/* Group name input */}
         {isGroup && (
           <div className="p-4 border-b border-border">
-            <input
+            <Input
               type="text"
               placeholder="Enter group name"
               value={groupName}
               onChange={(e) => setGroupName(e.target.value)}
-              className="w-full px-3 py-2 bg-muted rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:bg-background border border-transparent focus:border-primary"
             />
           </div>
         )}
 
         {/* Search */}
         <div className="p-4 border-b border-border">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <input
-              type="text"
-              placeholder="Search users..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 bg-muted rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:bg-background border border-transparent focus:border-primary"
-            />
-          </div>
+          <Input
+            type="text"
+            placeholder="Search users..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            leftIcon={<Search className="w-4 h-4" />}
+          />
         </div>
 
         {/* Selected users */}
@@ -190,19 +242,11 @@ export default function NewChatModal({ isOpen, onClose }: NewChatModalProps) {
             </p>
             <div className="flex flex-wrap gap-2">
               {selectedUsers.map((selectedUser) => (
-                <div
+                <SelectedUserTag
                   key={selectedUser._id}
-                  className="flex items-center space-x-2 bg-primary/10 text-primary px-3 py-1 rounded-full text-sm"
-                >
-                  <span>{selectedUser.username}</span>
-                  <button
-                    title="close"
-                    onClick={() => toggleUserSelection(selectedUser)}
-                    className="hover:bg-primary/20 rounded-full p-0.5"
-                  >
-                    <X className="w-3 h-3" />
-                  </button>
-                </div>
+                  username={selectedUser.username}
+                  onRemove={() => toggleUserSelection(selectedUser)}
+                />
               ))}
             </div>
           </div>
@@ -212,7 +256,7 @@ export default function NewChatModal({ isOpen, onClose }: NewChatModalProps) {
         <div className="flex-1 overflow-y-auto">
           {isSearching ? (
             <div className="flex items-center justify-center p-8">
-              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+              <LoadingSpinner />
             </div>
           ) : searchResults.length > 0 ? (
             <div className="space-y-1 p-2">
@@ -224,6 +268,7 @@ export default function NewChatModal({ isOpen, onClose }: NewChatModalProps) {
                 return (
                   <button
                     key={searchUser._id}
+                    type="button"
                     onClick={() => toggleUserSelection(searchUser)}
                     className={`w-full p-3 rounded-lg text-left transition-colors ${
                       isSelected
@@ -232,24 +277,12 @@ export default function NewChatModal({ isOpen, onClose }: NewChatModalProps) {
                     }`}
                   >
                     <div className="flex items-center space-x-3">
-                      <div className="relative">
-                        <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center">
-                          {searchUser.avatar ? (
-                            <img
-                              src={searchUser.avatar}
-                              alt={searchUser.username}
-                              className="w-full h-full rounded-full object-cover"
-                            />
-                          ) : (
-                            <span className="text-white font-medium">
-                              {searchUser.username.charAt(0).toUpperCase()}
-                            </span>
-                          )}
-                        </div>
-                        {searchUser.isOnline && (
-                          <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-500 border-2 border-background rounded-full"></div>
-                        )}
-                      </div>
+                      <Avatar
+                        src={searchUser.avatar}
+                        name={searchUser.username}
+                        size="md"
+                        isOnline={searchUser.isOnline}
+                      />
 
                       <div className="flex-1 min-w-0">
                         <p className="font-medium text-foreground truncate">
@@ -290,32 +323,31 @@ export default function NewChatModal({ isOpen, onClose }: NewChatModalProps) {
         </div>
 
         {/* Footer */}
-        <div className="p-4 border-t border-border">
+        <div className="p-4 border-t border-border mt-auto">
           <div className="flex space-x-3">
-            <button
+            <Button
+              variant="secondary"
               onClick={handleClose}
-              className="flex-1 py-2 px-4 border border-border rounded-lg hover:bg-muted transition-colors"
+              className="flex-1"
             >
               Cancel
-            </button>
-            <button
+            </Button>
+            <Button
               onClick={handleCreateConversation}
               disabled={
                 selectedUsers.length === 0 ||
+                (!isGroup && selectedUsers.length !== 1) ||
                 isCreating ||
                 (isGroup && !groupName.trim())
               }
-              className="flex-1 py-2 px-4 bg-primary text-white rounded-lg hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              isLoading={isCreating}
+              className="flex-1"
             >
-              {isCreating
-                ? "Creating..."
-                : isGroup
-                ? "Create Group"
-                : "Start Chat"}
-            </button>
+              {isGroup ? "Create Group" : "Start Chat"}
+            </Button>
           </div>
         </div>
       </div>
-    </div>
+    </Modal>
   );
 }

@@ -21,6 +21,17 @@ export interface Message {
     readAt: Date;
   }>;
   isAI: boolean;
+  replyTo?:
+    | {
+        _id: string;
+        content: string;
+        sender: { _id: string; username: string };
+        messageType?: "text" | "image" | "ai";
+        imageUrl?: string;
+      }
+    | string
+    | null;
+  reactions?: Array<{ emoji: string; users: string[] }>;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -51,6 +62,7 @@ export interface ChatState {
   conversations: Conversation[];
   activeConversation: Conversation | null;
   messages: Message[];
+  replyTo: Message | null;
   onlineUsers: Set<string>;
   typingUsers: Map<string, string>;
   isLoadingConversations: boolean;
@@ -67,6 +79,8 @@ export interface ChatState {
   setMessages: (messages: Message[] | ((prev: Message[]) => Message[])) => void;
   addMessage: (message: Message) => void;
   updateMessage: (messageId: string, updates: Partial<Message>) => void;
+  setReplyTo: (message: Message | null) => void;
+  clearReplyTo: () => void;
   setUserOnline: (userId: string) => void;
   setUserOffline: (userId: string) => void;
   setUserTyping: (

@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { Moon, Sun, ArrowLeft } from "lucide-react";
+import { Button, Input } from "../components/ui";
 import toast from "react-hot-toast";
 import api from "../lib/api";
 import { useAuthStore } from "../stores/authStore";
@@ -126,28 +127,26 @@ export default function VerifyOTP() {
           </p>
         </div>
 
-        {/* Theme Toggle */}
+        {/* Navigation */}
         <div className="flex justify-between items-center mb-4 sm:mb-6">
-          <button
-            type="button"
+          <Button
+            variant="ghost"
+            size="sm"
             onClick={() => navigate("/register")}
-            className="p-2.5 sm:p-2 rounded-lg bg-muted hover:bg-muted/80 transition-colors touch-manipulation"
+            className="p-2 bg-muted hover:bg-muted/80"
             aria-label="Go back to register"
           >
             <ArrowLeft className="w-5 h-5" />
-          </button>
-          <button
-            type="button"
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
             onClick={toggleTheme}
-            className="p-2.5 sm:p-2 rounded-lg bg-muted hover:bg-muted/80 transition-colors touch-manipulation"
+            className="p-2 bg-muted hover:bg-muted/80"
             aria-label="Toggle theme"
           >
-            {isDark ? (
-              <Sun className="w-5 h-5" />
-            ) : (
-              <Moon className="w-5 h-5" />
-            )}
-          </button>
+            {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+          </Button>
         </div>
 
         {/* Form */}
@@ -155,39 +154,30 @@ export default function VerifyOTP() {
           onSubmit={handleSubmit(onSubmit)}
           className="space-y-5 sm:space-y-6"
         >
-          <div>
-            <label className="block text-sm font-medium text-foreground mb-2">
-              Verification Code
-            </label>
-            <input
-              type="text"
-              {...register("otp", {
-                required: "Verification code is required",
-                pattern: {
-                  value: /^\d{6}$/,
-                  message: "Please enter a valid 6-digit code",
-                },
-              })}
-              className="w-full px-4 py-4 sm:py-3 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-center text-xl sm:text-lg tracking-widest"
-              placeholder="000000"
-              maxLength={6}
-              inputMode="numeric"
-              autoComplete="one-time-code"
-            />
-            {errors.otp && (
-              <p className="text-destructive text-sm mt-1">
-                {errors.otp.message}
-              </p>
-            )}
-          </div>
+          <Input
+            label="Verification Code"
+            type="text"
+            {...register("otp", {
+              required: "Verification code is required",
+              pattern: {
+                value: /^\d{6}$/,
+                message: "Please enter a valid 6-digit code",
+              },
+            })}
+            placeholder="000000"
+            maxLength={6}
+            error={errors.otp?.message}
+            className="text-center text-xl sm:text-lg tracking-widest py-4 sm:py-3"
+            containerClassName="input-numeric"
+          />
 
-          <button
+          <Button
             type="submit"
-            disabled={isLoading}
-            className="w-full bg-primary text-white py-3.5 sm:py-3 rounded-lg font-medium hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors touch-manipulation text-base sm:text-sm"
+            isLoading={isLoading}
+            className="w-full py-3.5 sm:py-3 text-base sm:text-sm"
           >
-            {isLoading ? "Verifying..." : "Verify Email"}
-          </button>
+            Verify Email
+          </Button>
         </form>
 
         {/* Resend OTP */}
@@ -195,18 +185,15 @@ export default function VerifyOTP() {
           <p className="text-sm sm:text-base text-muted-foreground mb-2">
             Didn't receive the code?
           </p>
-          <button
-            type="button"
+          <Button
+            variant="ghost"
             onClick={handleResendOTP}
             disabled={countdown > 0 || isResending}
-            className="text-primary hover:underline font-medium disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation text-sm sm:text-base"
+            isLoading={isResending}
+            className="text-primary hover:underline font-medium text-sm sm:text-base p-0 h-auto"
           >
-            {isResending
-              ? "Sending..."
-              : countdown > 0
-              ? `Resend in ${countdown}s`
-              : "Resend Code"}
-          </button>
+            {countdown > 0 ? `Resend in ${countdown}s` : "Resend Code"}
+          </Button>
         </div>
       </div>
     </div>

@@ -158,7 +158,7 @@ const ConversationList = memo(function ConversationList({
               {/* Avatar */}
               <div className="relative">
                 <div
-                  className={`w-14 h-14 md:w-12 md:h-12 rounded-full flex items-center justify-center ${
+                  className={`w-14 h-14 md:w-12 md:h-12 rounded-full flex items-center justify-center border ${
                     isAI
                       ? "bg-gradient-to-br from-purple-500 to-blue-600"
                       : avatar
@@ -189,7 +189,7 @@ const ConversationList = memo(function ConversationList({
                 {/* AI indicator */}
                 {isAI && (
                   <div className="absolute -bottom-1 -right-1 w-5 h-5 md:w-4 md:h-4 bg-gradient-to-br from-purple-500 to-blue-600 border-2 border-background rounded-full flex items-center justify-center">
-                    <div className="w-2.5 h-2.5 md:w-2 md:h-2 bg-white rounded-full animate-pulse"></div>
+                    <div className="absolute bottom-0.5 right-0.5 w-2 h-2  bg-white rounded-full animate-pulse"></div>
                   </div>
                 )}
               </div>

@@ -1,9 +1,12 @@
+import { useEffect, useState } from "react";
 import { useChatStore } from "../stores/chatStore";
+import { socketService } from "../lib/socket";
 import ChatHeader from "./ChatHeader";
 import MessageList from "./MessageList";
 import MessageInput from "./MessageInput";
-import { useEffect, useState } from "react";
-import { socketService } from "../lib/socket";
+import MediaModal from "./MediaModal";
+import AboutModal from "./AboutModal";
+import GroupInfoModal from "./GroupInfoModal";
 
 interface ChatAreaProps {
   showBackButton?: boolean;
@@ -11,15 +14,30 @@ interface ChatAreaProps {
 
 export default function ChatArea({ showBackButton = false }: ChatAreaProps) {
   const [showMedia, setShowMedia] = useState(false);
-  const { messages } = useChatStore();
+  const [showAbout, setShowAbout] = useState(false);
+  const [showGroupInfo, setShowGroupInfo] = useState(false);
+  
+  const { messages, activeConversation } = useChatStore();
 
   useEffect(() => {
     const handler = () => setShowMedia(true);
+    const aboutHandler = () => setShowAbout(true);
+    const groupInfoHandler = () => setShowGroupInfo(true);
     window.addEventListener("open-view-media", handler as EventListener);
-    return () =>
+    window.addEventListener("open-about", aboutHandler as EventListener);
+    window.addEventListener(
+      "open-group-info",
+      groupInfoHandler as EventListener
+    );
+    return () => {
       window.removeEventListener("open-view-media", handler as EventListener);
+      window.removeEventListener("open-about", aboutHandler as EventListener);
+      window.removeEventListener(
+        "open-group-info",
+        groupInfoHandler as EventListener
+      );
+    };
   }, []);
-  const { activeConversation } = useChatStore();
 
   useEffect(() => {
     if (!activeConversation) return;
@@ -68,36 +86,24 @@ export default function ChatArea({ showBackButton = false }: ChatAreaProps) {
       <ChatHeader showBackButton={showBackButton} />
       <MessageList />
       <MessageInput />
-      {showMedia && (
-        <div
-          className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4"
-          onClick={() => setShowMedia(false)}
-        >
-          <div
-            className="bg-background rounded-2xl p-4 max-w-3xl w-full max-h-[80vh] overflow-auto"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="text-lg font-semibold mb-3">Media & Files</div>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-              {messages
-                .filter((m) => m.messageType === "image" && m.imageUrl)
-                .map((m) => (
-                  <img
-                    key={m._id}
-                    src={m.imageUrl!}
-                    alt="media"
-                    className="w-full h-40 object-cover rounded-lg"
-                  />
-                ))}
-              {messages.filter((m) => m.messageType === "image" && m.imageUrl)
-                .length === 0 && (
-                <div className="text-sm text-muted-foreground">
-                  No media yet in this chat.
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
+      
+      <MediaModal
+        isOpen={showMedia}
+        onClose={() => setShowMedia(false)}
+        messages={messages}
+      />
+      
+      <AboutModal
+        isOpen={showAbout}
+        onClose={() => setShowAbout(false)}
+      />
+      
+      {activeConversation?.isGroup && (
+        <GroupInfoModal
+          isOpen={showGroupInfo}
+          onClose={() => setShowGroupInfo(false)}
+          conversation={activeConversation}
+        />
       )}
     </div>
   );

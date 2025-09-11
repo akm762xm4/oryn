@@ -6,6 +6,7 @@ import {
   resendOTP,
   updateProfile,
   uploadAvatar,
+  changePassword,
 } from "../controllers/authController.js";
 import rateLimit from "express-rate-limit";
 import multer from "multer";
@@ -48,6 +49,7 @@ router.post("/resend-otp", otpLimiter, resendOTP);
 
 // Protected routes
 router.put("/profile", authenticate, updateProfile);
+router.post("/change-password", authenticate, changePassword);
 router.post(
   "/upload-avatar",
   authenticate,

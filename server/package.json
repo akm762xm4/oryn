@@ -1,5 +1,5 @@
 {
-  "name": "chat-app-server",
+  "name": "oryn-server",
   "version": "1.0.0",
   "type": "module",
   "scripts": {

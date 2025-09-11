@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
-import { Eye, EyeOff, Moon, Sun } from "lucide-react";
+import { Eye, EyeOff, Moon, Sun, User, Lock, Mail } from "lucide-react";
+import { Button, Input } from "../components/ui";
 import toast from "react-hot-toast";
 import api from "../lib/api";
 import { useThemeStore } from "../stores/themeStore";
@@ -76,100 +77,83 @@ export default function Register() {
         </div>
 
         {/* Theme Toggle */}
-        <button
-          type="button"
+        <Button
+          variant="ghost"
+          size="sm"
           onClick={toggleTheme}
-          className="absolute top-4 right-4 p-2.5 sm:p-2 rounded-lg bg-muted hover:bg-muted/80 transition-colors touch-manipulation"
+          className="absolute top-4 right-4 p-2 bg-muted hover:bg-muted/80"
           aria-label="Toggle theme"
         >
           {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-        </button>
+        </Button>
 
         {/* Form */}
         <form
           onSubmit={handleSubmit(onSubmit)}
           className="space-y-4 sm:space-y-6"
         >
-          <div>
-            <label className="block text-sm font-medium text-foreground mb-2">
-              Username
-            </label>
-            <input
-              type="text"
-              {...register("username", {
-                required: "Username is required",
-                minLength: {
-                  value: 3,
-                  message: "Username must be at least 3 characters",
-                },
-                maxLength: {
-                  value: 20,
-                  message: "Username must be less than 20 characters",
-                },
-                pattern: {
-                  value: /^[a-zA-Z0-9_]+$/,
-                  message:
-                    "Username can only contain letters, numbers, and underscores",
-                },
-              })}
-              className="w-full px-4 py-3.5 sm:py-3 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-base sm:text-sm"
-              placeholder="Choose a username"
-              autoComplete="username"
-            />
-            {errors.username && (
-              <p className="text-destructive text-sm mt-1">
-                {errors.username.message}
-              </p>
-            )}
-          </div>
+          <Input
+            label="Username"
+            type="text"
+            {...register("username", {
+              required: "Username is required",
+              minLength: {
+                value: 3,
+                message: "Username must be at least 3 characters",
+              },
+              maxLength: {
+                value: 20,
+                message: "Username must be less than 20 characters",
+              },
+              pattern: {
+                value: /^[a-zA-Z0-9_]+$/,
+                message:
+                  "Username can only contain letters, numbers, and underscores",
+              },
+            })}
+            leftIcon={<User className="w-4 h-4 " />}
+            placeholder="Choose a username"
+            autoComplete="username"
+            error={errors.username?.message}
+            className="py-3.5 sm:py-3 text-base sm:text-sm"
+          />
 
-          <div>
-            <label className="block text-sm font-medium text-foreground mb-2">
-              Email
-            </label>
-            <input
-              type="email"
-              {...register("email", {
-                required: "Email is required",
-                pattern: {
-                  value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                  message: "Invalid email address",
-                },
-              })}
-              className="w-full px-4 py-3.5 sm:py-3 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-base sm:text-sm"
-              placeholder="Enter your email"
-              autoComplete="email"
-              inputMode="email"
-            />
-            {errors.email && (
-              <p className="text-destructive text-sm mt-1">
-                {errors.email.message}
-              </p>
-            )}
-          </div>
+          <Input
+            label="Email"
+            type="email"
+            {...register("email", {
+              required: "Email is required",
+              pattern: {
+                value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+                message: "Invalid email address",
+              },
+            })}
+            leftIcon={<Mail className="w-4 h-4 " />}
+            placeholder="Enter your email"
+            autoComplete="email"
+            error={errors.email?.message}
+            className="py-3.5 sm:py-3 text-base sm:text-sm"
+          />
 
-          <div>
-            <label className="block text-sm font-medium text-foreground mb-2">
-              Password
-            </label>
-            <div className="relative">
-              <input
-                type={showPassword ? "text" : "password"}
-                {...register("password", {
-                  required: "Password is required",
-                  minLength: {
-                    value: 6,
-                    message: "Password must be at least 6 characters",
-                  },
-                })}
-                className="w-full px-4 py-3.5 sm:py-3 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent pr-12 text-base sm:text-sm"
-                placeholder="Create a password"
-                autoComplete="new-password"
-              />
+          <Input
+            label="Password"
+            type={showPassword ? "text" : "password"}
+            {...register("password", {
+              required: "Password is required",
+              minLength: {
+                value: 6,
+                message: "Password must be at least 6 characters",
+              },
+            })}
+            placeholder="Create a password"
+            autoComplete="new-password"
+            error={errors.password?.message}
+            leftIcon={<Lock className="w-4 h-4 " />}
+            rightIcon={
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground p-1 touch-manipulation"
+                className="text-muted-foreground hover:text-foreground p-1"
                 aria-label={showPassword ? "Hide password" : "Show password"}
               >
                 {showPassword ? (
@@ -178,34 +162,27 @@ export default function Register() {
                   <Eye className="w-5 h-5" />
                 )}
               </button>
-            </div>
-            {errors.password && (
-              <p className="text-destructive text-sm mt-1">
-                {errors.password.message}
-              </p>
-            )}
-          </div>
+            }
+            className="py-3.5 sm:py-3 text-base sm:text-sm"
+          />
 
-          <div>
-            <label className="block text-sm font-medium text-foreground mb-2">
-              Confirm Password
-            </label>
-            <div className="relative">
-              <input
-                type={showConfirmPassword ? "text" : "password"}
-                {...register("confirmPassword", {
-                  required: "Please confirm your password",
-                  validate: (value) =>
-                    value === password || "Passwords do not match",
-                })}
-                className="w-full px-4 py-3.5 sm:py-3 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent pr-12 text-base sm:text-sm"
-                placeholder="Confirm your password"
-                autoComplete="new-password"
-              />
+          <Input
+            label="Confirm Password"
+            type={showConfirmPassword ? "text" : "password"}
+            {...register("confirmPassword", {
+              required: "Please confirm your password",
+              validate: (value) =>
+                value === password || "Passwords do not match",
+            })}
+            placeholder="Confirm your password"
+            autoComplete="new-password"
+            error={errors.confirmPassword?.message}
+            leftIcon={<Lock className="w-4 h-4 " />}
+            rightIcon={
               <button
                 type="button"
                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground p-1 touch-manipulation"
+                className="text-muted-foreground hover:text-foreground p-1"
                 aria-label={
                   showConfirmPassword ? "Hide password" : "Show password"
                 }
@@ -216,21 +193,17 @@ export default function Register() {
                   <Eye className="w-5 h-5" />
                 )}
               </button>
-            </div>
-            {errors.confirmPassword && (
-              <p className="text-destructive text-sm mt-1">
-                {errors.confirmPassword.message}
-              </p>
-            )}
-          </div>
+            }
+            className="py-3.5 sm:py-3 text-base sm:text-sm"
+          />
 
-          <button
+          <Button
             type="submit"
-            disabled={isLoading}
-            className="w-full bg-primary text-white py-3.5 sm:py-3 rounded-lg font-medium hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors touch-manipulation text-base sm:text-sm"
+            isLoading={isLoading}
+            className="w-full py-3.5 sm:py-3 text-base sm:text-sm"
           >
-            {isLoading ? "Creating account..." : "Create Account"}
-          </button>
+            Create Account
+          </Button>
         </form>
 
         {/* Footer */}

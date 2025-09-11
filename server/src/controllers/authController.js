@@ -1,4 +1,5 @@
 import jwt from "jsonwebtoken";
+import fs from "fs";
 import User from "../models/User.js";
 import { sendOTP } from "../utils/email.js";
 import cloudinary from "../config/cloudinary.js";
@@ -208,6 +209,24 @@ export const updateProfile = async (req, res) => {
   }
 };
 
+export const changePassword = async (req, res) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+    const user = await User.findById(req.user._id);
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    const isMatch = await user.comparePassword(currentPassword);
+    if (!isMatch)
+      return res.status(400).json({ message: "Current password is incorrect" });
+
+    user.password = newPassword;
+    await user.save();
+    res.json({ message: "Password updated successfully" });
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
 export const uploadAvatar = async (req, res) => {
   try {
     const userId = req.user._id;
@@ -236,6 +255,7 @@ export const uploadAvatar = async (req, res) => {
 
     // Compress and optimize image before uploading to Cloudinary
     const compressedImageBuffer = await sharp(req.file.path)
+      .rotate() // auto-orient based on EXIF
       .resize(400, 400, {
         fit: "cover",
         position: "center",

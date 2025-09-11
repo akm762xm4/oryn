@@ -14,6 +14,9 @@ export const handleConnection = (io, socket) => {
   // Update user online status
   updateUserStatus(socket.userId, true);
 
+  // Join a personal room for direct emits
+  socket.join(socket.userId.toString());
+
   // Join user to their conversations
   joinUserRooms(socket);
 
@@ -36,7 +39,13 @@ export const handleConnection = (io, socket) => {
   // Handle new message
   socket.on("sendMessage", async (data) => {
     try {
-      const { conversationId, content, messageType = "text", imageUrl } = data;
+      const {
+        conversationId,
+        content,
+        messageType = "text",
+        imageUrl,
+        replyTo,
+      } = data;
 
       const conversation = await Conversation.findById(conversationId);
       if (!conversation || !conversation.participants.includes(socket.userId)) {
@@ -49,10 +58,33 @@ export const handleConnection = (io, socket) => {
         content,
         messageType,
         imageUrl,
+        replyTo,
       });
 
       await message.save();
       await message.populate("sender", "username avatar");
+
+      // Populate replyTo preview if present
+      if (replyTo) {
+        try {
+          const replied = await Message.findById(replyTo).populate(
+            "sender",
+            "username"
+          );
+          if (replied) {
+            message.replyTo = {
+              _id: replied._id,
+              content: replied.content,
+              messageType: replied.messageType,
+              imageUrl: replied.imageUrl,
+              sender: {
+                _id: replied.sender._id,
+                username: replied.sender.username,
+              },
+            };
+          }
+        } catch {}
+      }
 
       // Update conversation
       conversation.lastMessage = message._id;
@@ -78,6 +110,43 @@ export const handleConnection = (io, socket) => {
       // Here you would implement push notifications for offline users
     } catch (error) {
       socket.emit("error", { message: "Failed to send message" });
+    }
+  });
+
+  // Toggle reaction on a message
+  socket.on("toggleReaction", async ({ messageId, emoji }) => {
+    try {
+      const message = await Message.findById(messageId);
+      if (!message) return;
+      // ensure participant
+      const conversation = await Conversation.findById(message.conversation);
+      if (!conversation || !conversation.participants.includes(socket.userId))
+        return;
+
+      const existing = (message.reactions || []).find((r) => r.emoji === emoji);
+      if (!existing) {
+        message.reactions = [
+          ...(message.reactions || []),
+          { emoji, users: [socket.userId] },
+        ];
+      } else {
+        const idx = existing.users.findIndex(
+          (u) => u.toString() === socket.userId
+        );
+        if (idx >= 0) {
+          existing.users.splice(idx, 1);
+        } else {
+          existing.users.push(socket.userId);
+        }
+      }
+      await message.save();
+      await message.populate("sender", "username avatar");
+      io.to(message.conversation.toString()).emit("reactionUpdated", {
+        messageId: message._id.toString(),
+        reactions: message.reactions,
+      });
+    } catch (e) {
+      // ignore
     }
   });
 
@@ -136,6 +205,11 @@ export const handleConnection = (io, socket) => {
           messageId,
           readBy: socket.userId,
           readAt: new Date(),
+        });
+
+        // Notify the user's other sessions to clear unread badge for this conversation
+        io.to(socket.userId.toString()).emit("conversationClearedUnread", {
+          conversationId,
         });
       }
     } catch (error) {

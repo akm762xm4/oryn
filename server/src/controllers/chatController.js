@@ -170,6 +170,17 @@ export const createConversation = async (req, res) => {
       "username avatar isOnline lastSeen"
     );
 
+    // Emit to newly added participants so their lists update in realtime
+    try {
+      const io = req.app.get("io");
+      const participantIds = conversation.participants
+        .map((p) => p._id?.toString?.() || p.toString())
+        .filter((id) => id !== req.user._id.toString());
+      for (const pid of participantIds) {
+        io.to(pid).emit("conversationAdded", conversation);
+      }
+    } catch {}
+
     res.status(201).json(conversation);
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });
@@ -242,15 +253,108 @@ export const getMessages = async (req, res) => {
       }
     });
 
+    // Populate reply previews (content + sender username)
+    const replyIds = populatedMessages
+      .map((m) => (m.replyTo ? m.replyTo.toString() : null))
+      .filter(Boolean);
+    let replyMap = {};
+    if (replyIds.length) {
+      const replies = await Message.find({ _id: { $in: replyIds } })
+        .select("content sender messageType imageUrl")
+        .lean();
+      const replySenderIds = [
+        ...new Set(replies.map((r) => r.sender.toString())),
+      ];
+      const replyUsers = await User.find({ _id: { $in: replySenderIds } })
+        .select("username")
+        .lean();
+      const replyUserMap = replyUsers.reduce((map, u) => {
+        map[u._id.toString()] = u;
+        return map;
+      }, {});
+      replyMap = replies.reduce((map, r) => {
+        map[r._id.toString()] = {
+          _id: r._id,
+          content: r.content,
+          messageType: r.messageType,
+          imageUrl: r.imageUrl,
+          sender: {
+            _id: r.sender,
+            username: replyUserMap[r.sender.toString()]?.username || "User",
+          },
+        };
+        return map;
+      }, {});
+    }
+
+    const withReplies = populatedMessages.map((m) =>
+      m.replyTo ? { ...m, replyTo: replyMap[m.replyTo.toString()] || null } : m
+    );
+
     // For reverse pagination (desc sort), return messages as-is (newest first)
     // For normal pagination (asc sort), reverse to show oldest first
-    const finalMessages =
-      sort === "desc" ? populatedMessages : populatedMessages.reverse();
+    const finalMessages = sort === "desc" ? withReplies : withReplies.reverse();
 
     // Add cache headers for better performance (cache for 1 minute)
     res.set("Cache-Control", "private, max-age=60");
 
     res.json(finalMessages);
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
+export const exportConversation = async (req, res) => {
+  try {
+    const { conversationId } = req.params;
+    const conversation = await Conversation.findById(conversationId).populate(
+      "participants",
+      "username email avatar"
+    );
+    if (
+      !conversation ||
+      !conversation.participants.some((p) => p._id.equals(req.user._id))
+    ) {
+      return res.status(404).json({ message: "Conversation not found" });
+    }
+
+    const messages = await Message.find({ conversation: conversationId })
+      .sort({ createdAt: 1 })
+      .populate("sender", "username email avatar");
+
+    const exportPayload = {
+      conversation: {
+        _id: conversation._id,
+        isGroup: conversation.isGroup,
+        groupName: conversation.groupName,
+        participants: conversation.participants.map((p) => ({
+          _id: p._id,
+          username: p.username,
+          email: p.email,
+          avatar: p.avatar,
+        })),
+        createdAt: conversation.createdAt,
+        updatedAt: conversation.updatedAt,
+      },
+      messages: messages.map((m) => ({
+        _id: m._id,
+        sender: {
+          _id: m.sender._id,
+          username: m.sender.username,
+        },
+        content: m.content,
+        messageType: m.messageType,
+        imageUrl: m.imageUrl,
+        createdAt: m.createdAt,
+      })),
+      exportedAt: new Date().toISOString(),
+    };
+
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename=conversation-${conversation._id}.json`
+    );
+    res.json(exportPayload);
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });
   }
@@ -263,6 +367,7 @@ export const sendMessage = async (req, res) => {
       content,
       messageType = "text",
       imageUrl,
+      replyTo,
     } = req.body;
 
     const conversation = await Conversation.findById(conversationId);
@@ -276,10 +381,33 @@ export const sendMessage = async (req, res) => {
       content,
       messageType,
       imageUrl,
+      replyTo,
     });
 
     await message.save();
     await message.populate("sender", "username avatar");
+
+    // Populate replyTo preview if present
+    if (replyTo) {
+      try {
+        const replied = await Message.findById(replyTo).populate(
+          "sender",
+          "username"
+        );
+        if (replied) {
+          message.replyTo = {
+            _id: replied._id,
+            content: replied.content,
+            messageType: replied.messageType,
+            imageUrl: replied.imageUrl,
+            sender: {
+              _id: replied.sender._id,
+              username: replied.sender.username,
+            },
+          };
+        }
+      } catch {}
+    }
 
     // Update conversation
     conversation.lastMessage = message._id;
@@ -598,6 +726,40 @@ export const fixDuplicateConversations = async (req, res) => {
       message: `Fixed ${fixedCount} conversations with duplicate participants`,
       problematicConversations,
     });
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
+export const renameGroup = async (req, res) => {
+  try {
+    const { conversationId } = req.params;
+    const { groupName } = req.body;
+    const conversation = await Conversation.findById(conversationId).populate(
+      "participants",
+      "username avatar isOnline lastSeen"
+    );
+    if (!conversation || !conversation.isGroup) {
+      return res.status(404).json({ message: "Group conversation not found" });
+    }
+    // Only a participant can rename (you can restrict to admin if needed)
+    if (!conversation.participants.some((p) => p._id.equals(req.user._id))) {
+      return res.status(403).json({ message: "Not authorized" });
+    }
+
+    conversation.groupName =
+      groupName?.trim()?.slice(0, 50) || conversation.groupName;
+    await conversation.save();
+
+    // Emit update to all participants' personal rooms
+    const io = req.app.get("io");
+    if (io) {
+      for (const p of conversation.participants) {
+        io.to(p._id.toString()).emit("conversationUpdated", conversation);
+      }
+    }
+
+    res.json({ message: "Group renamed", conversation });
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });
   }

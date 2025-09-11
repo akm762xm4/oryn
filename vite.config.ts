@@ -11,4 +11,36 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  build: {
+    // Enable tree shaking
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          // Split vendor chunks
+          react: ["react", "react-dom"],
+          router: ["react-router-dom"],
+          ui: ["lucide-react", "react-hot-toast"],
+          markdown: ["react-markdown", "rehype-highlight", "remark-gfm"],
+          utils: ["date-fns", "axios"],
+        },
+      },
+    },
+    // Optimize chunk size
+    chunkSizeWarningLimit: 500,
+    // Enable minification
+    minify: 'terser',
+    // Remove console logs in production
+    terserOptions: {
+      compress: {
+        drop_console: true,
+        drop_debugger: true,
+      },
+    },
+  },
+  // Optimize dev server
+  server: {
+    hmr: {
+      overlay: false,
+    },
+  },
 });

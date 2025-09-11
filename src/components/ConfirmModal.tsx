@@ -1,4 +1,5 @@
 import { X } from "lucide-react";
+import Button from "./ui/Button";
 
 interface ConfirmModalProps {
   isOpen: boolean;
@@ -24,14 +25,16 @@ export default function ConfirmModal({
       <div className="bg-background rounded-lg w-full max-w-sm">
         <div className="flex items-center justify-between p-4 border-b border-border">
           <h2 className="text-lg font-semibold text-foreground">{title}</h2>
-          <button
+          <Button
             type="button"
             onClick={onClose}
-            className="p-1 rounded-lg hover:bg-muted transition-colors"
+            variant="ghost"
+            size="sm"
+            className="p-1 rounded-lg"
             title="Close"
           >
             <X className="w-5 h-5" />
-          </button>
+          </Button>
         </div>
 
         <div className="p-6">
@@ -40,20 +43,24 @@ export default function ConfirmModal({
           )}
 
           <div className="flex space-x-3">
-            <button
+            <Button
               type="button"
               onClick={onClose}
-              className="flex-1 py-2 px-4 border border-border rounded-lg hover:bg-muted transition-colors"
+              variant="secondary"
+              size="md"
+              className="flex-1"
             >
               Cancel
-            </button>
-            <button
+            </Button>
+            <Button
               type="button"
               onClick={onConfirm}
-              className="flex-1 py-2 px-4 bg-destructive text-destructive-foreground rounded-lg hover:bg-destructive/90 transition-colors"
+              variant="destructive"
+              size="md"
+              className="flex-1"
             >
               {confirmText}
-            </button>
+            </Button>
           </div>
         </div>
       </div>

@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import Button from "./ui/Button";
 import { Send, Image } from "lucide-react";
 import { useChatStore } from "../stores/chatStore";
 import { useAuthStore } from "../stores/authStore";
@@ -6,6 +7,7 @@ import { socketService } from "../lib/socket";
 import api from "../lib/api";
 import toast from "react-hot-toast";
 import { usePreferencesStore } from "../stores/preferencesStore";
+import { getCloudinaryThumbUrl } from "../lib/images";
 
 export default function MessageInput() {
   const [message, setMessage] = useState("");
@@ -22,6 +24,8 @@ export default function MessageInput() {
     addMessage,
     updateMessage,
     setAiGenerating,
+    replyTo,
+    clearReplyTo,
     // isLoadingMessages
   } = useChatStore();
 
@@ -113,6 +117,7 @@ export default function MessageInput() {
           conversationId: activeConversation._id,
           content: messageContent,
           messageType: "text",
+          replyTo: typeof replyTo === "string" ? replyTo : replyTo?._id,
         });
 
         // Replace optimistic user message if server returned it
@@ -126,13 +131,46 @@ export default function MessageInput() {
 
         setAiGenerating(false);
       } else {
-        // Send regular message via socket
+        // Optimistic add for non-AI: insert temp message so reply preview shows instantly
+        const tempId = `temp-${Date.now()}`;
+        addMessage({
+          _id: tempId,
+          conversation: activeConversation._id,
+          sender: user || ({ _id: "me" } as any),
+          content: messageContent,
+          messageType: "text" as const,
+          status: "sent" as const,
+          readBy: [],
+          isAI: false,
+          replyTo:
+            typeof replyTo === "string"
+              ? (replyTo as any)
+              : replyTo
+              ? {
+                  _id: (replyTo as any)._id,
+                  content: (replyTo as any).content,
+                  messageType: (replyTo as any).messageType,
+                  imageUrl: (replyTo as any).imageUrl,
+                  sender: (replyTo as any).sender,
+                }
+              : null,
+          createdAt: new Date() as any,
+          updatedAt: new Date() as any,
+        } as any);
+
+        // Send regular message via socket; server will broadcast enriched message
         socketService.sendMessage({
           conversationId: activeConversation._id,
           content: messageContent,
-          messageType: "text",
+          messageType: "text" as const,
+          replyTo:
+            typeof replyTo === "string" ? replyTo : (replyTo as any)?._id,
         });
       }
+      // Clear reply state on successful send
+      if (replyTo) clearReplyTo();
+      // Clear reply state on successful send
+      if (replyTo) clearReplyTo();
 
       // Feedback
       if (soundEnabled) {
@@ -188,15 +226,45 @@ export default function MessageInput() {
         },
       });
 
+      // Optimistic add for image message as well
+      const tempId = `temp-${Date.now()}`;
+      addMessage({
+        _id: tempId,
+        conversation: activeConversation._id,
+        sender: user || ({ _id: "me" } as any),
+        content: "",
+        messageType: "image" as const,
+        imageUrl: response.data.imageUrl,
+        status: "sent" as const,
+        readBy: [],
+        isAI: false,
+        replyTo:
+          typeof replyTo === "string"
+            ? (replyTo as any)
+            : replyTo
+            ? {
+                _id: (replyTo as any)._id,
+                content: (replyTo as any).content,
+                messageType: (replyTo as any).messageType,
+                imageUrl: (replyTo as any).imageUrl,
+                sender: (replyTo as any).sender,
+              }
+            : null,
+        createdAt: new Date() as any,
+        updatedAt: new Date() as any,
+      } as any);
+
       // Send image message via socket
       socketService.sendMessage({
         conversationId: activeConversation._id,
         content: "",
         messageType: "image",
         imageUrl: response.data.imageUrl,
+        replyTo: typeof replyTo === "string" ? replyTo : (replyTo as any)?._id,
       });
 
       toast.success("Image sent successfully");
+      if (replyTo) clearReplyTo();
     } catch {
       toast.error("Failed to upload image");
     } finally {
@@ -218,13 +286,51 @@ export default function MessageInput() {
 
   return (
     <div className="border-t border-border bg-background p-2  sticky bottom-0 left-0 w-full z-20">
+      {/* Hide reply preview in AI conversations */}
+      {replyTo && !isAIMode && (
+        <div className="mx-1 mb-2 p-2 rounded-lg bg-muted text-xs flex items-start justify-between border-l-2 border-primary/60">
+          <div className="flex items-start gap-2 pr-2 min-w-0">
+            {((replyTo as any).imageUrl ||
+              (replyTo as any).messageType === "image") && (
+              <img
+                src={getCloudinaryThumbUrl((replyTo as any).imageUrl)}
+                alt="reply preview"
+                className="w-10 h-10 rounded object-cover flex-shrink-0"
+              />
+            )}
+            <div className="min-w-0">
+              <div className="font-medium truncate">
+                {replyTo.sender?.username}
+              </div>
+              <div className="opacity-80 truncate">
+                {(replyTo as any).messageType === "image"
+                  ? replyTo.content?.trim()
+                    ? replyTo.content.slice(0, 120)
+                    : "Photo"
+                  : replyTo.content?.slice(0, 120)}
+              </div>
+            </div>
+          </div>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="ml-2 px-2"
+            onClick={clearReplyTo}
+            aria-label="Cancel reply"
+            title="Cancel reply"
+          >
+            ✕
+          </Button>
+        </div>
+      )}
       <form
         onSubmit={handleSendMessage}
         className="flex items-center gap-2 md:gap-3   rounded-lg"
       >
         {/* Image upload */}
         {!isAIMode && (
-          <div className="flex-shrink-0">
+          <div className="flex">
             <label
               className={`p-2 md:p-3 rounded-lg md:rounded-xl transition-colors touch-manipulation ${
                 isSending
@@ -258,17 +364,16 @@ export default function MessageInput() {
         />
 
         {/* Send button */}
-        <button
+        <Button
           type="submit"
+          variant="primary"
+          size="lg"
+          className="flex-shrink-0 p-3 md:p-4 rounded-full shadow-md"
           disabled={!message.trim() || isSending}
-          className="flex-shrink-0 p-3 md:p-4 bg-primary text-white rounded-full hover:bg-primary/90 active:bg-primary/80 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors touch-manipulation shadow-md"
+          isLoading={isSending}
         >
-          {isSending ? (
-            <div className="w-5 h-5 md:w-6 md:h-6 border-2 border-white border-t-transparent rounded-full animate-spin" />
-          ) : (
-            <Send className="w-5 h-5 md:w-6 md:h-6" />
-          )}
-        </button>
+          {!isSending && <Send className="w-5 h-5 md:w-6 md:h-6" />}
+        </Button>
       </form>
 
       {/* AI mode notice */}

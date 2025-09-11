@@ -2,7 +2,9 @@ import { useEffect, useRef, useState, useCallback, memo } from "react";
 import { format, isToday, isYesterday } from "date-fns";
 import { useAuthStore } from "../stores/authStore";
 import { useChatStore } from "../stores/chatStore";
+import { useBackgroundStore } from "../stores/backgroundStore";
 import { socketService } from "../lib/socket";
+import { LoadingSpinner, AIGeneratingIndicator, DateSeparator } from "./ui";
 import MessageBubble from "./MessageBubble";
 import TypingIndicator from "./TypingIndicator";
 import { MessageListSkeleton } from "./skeletons/MessageSkeleton";
@@ -32,6 +34,13 @@ const MessageList = memo(function MessageList() {
     typingUsers,
     aiGenerating,
   } = useChatStore();
+  const { getCurrentBackground } = useBackgroundStore();
+
+  const currentBackground = getCurrentBackground();
+  const isTheme = (currentBackground as any).isTheme;
+  const themeGradient = (currentBackground as any).gradient as
+    | string
+    | undefined;
 
   const loadMessages = useCallback(
     async (pageNum = 1) => {
@@ -259,7 +268,30 @@ const MessageList = memo(function MessageList() {
   // Empty state
   if (messages.length === 0 && !isInitialLoading) {
     return (
-      <div className="flex flex-1 items-center justify-center p-8">
+      <div
+        className={`flex flex-1 items-center justify-center p-8 ${
+          currentBackground.isImage
+            ? ""
+            : isTheme
+            ? ""
+            : currentBackground.value
+        }`}
+        style={
+          currentBackground.isImage
+            ? {
+                backgroundImage: currentBackground.value,
+                backgroundSize: "cover",
+                backgroundPosition: "center",
+                backgroundRepeat: "no-repeat",
+                backgroundAttachment: "fixed",
+              }
+            : isTheme && themeGradient
+            ? {
+                backgroundImage: themeGradient,
+              }
+            : {}
+        }
+      >
         <div className="text-center max-w-md ">
           <img
             className="w-[80%] mx-auto"
@@ -280,13 +312,34 @@ const MessageList = memo(function MessageList() {
   return (
     <div
       ref={messagesContainerRef}
-      className="flex flex-col flex-1 overflow-y-auto p-4 space-y-4"
+      className={`relative flex flex-col flex-1 overflow-y-auto p-4 space-y-4 ${
+        currentBackground.isImage ? "" : isTheme ? "" : currentBackground.value
+      }`}
+      style={
+        currentBackground.isImage
+          ? {
+              backgroundImage: currentBackground.value,
+              backgroundSize: "cover",
+              backgroundPosition: "center",
+              backgroundRepeat: "no-repeat",
+              backgroundAttachment: "fixed",
+            }
+          : isTheme && themeGradient
+          ? {
+              backgroundImage: themeGradient,
+            }
+          : {}
+      }
       onScroll={handleScroll}
     >
+      {/* Grain overlay for themed gradients */}
+      {isTheme && (
+        <div className="pointer-events-none absolute inset-0 grain-overlay" />
+      )}
       {/* Load more indicator */}
       {isLoading && page > 1 && (
         <div className="text-center py-2">
-          <div className="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+          <LoadingSpinner />
         </div>
       )}
 
@@ -305,16 +358,12 @@ const MessageList = memo(function MessageList() {
             shouldShowDateSeparator(messages[index + 1], message));
 
         return (
-          <div key={message._id}>
+          <div key={message._id} id={`message-${message._id}`}>
             {/* Date separator */}
             {showDateSeparator && (
-              <div className="flex items-center justify-center my-6">
-                <div className="bg-muted px-3 py-1 rounded-full">
-                  <span className="text-xs text-muted-foreground font-medium">
-                    {formatDateSeparator(new Date(message.createdAt))}
-                  </span>
-                </div>
-              </div>
+              <DateSeparator>
+                {formatDateSeparator(new Date(message.createdAt))}
+              </DateSeparator>
             )}
 
             {/* Message */}
@@ -328,18 +377,7 @@ const MessageList = memo(function MessageList() {
       })}
 
       {/* AI generating indicator */}
-      {aiGenerating && (
-        <div className="flex items-center space-x-3 mb-2">
-          <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
-            <div className="w-3 h-3 bg-muted-foreground/50 rounded-full animate-pulse" />
-          </div>
-          <div className="bg-muted px-4 py-2 rounded-2xl">
-            <p className="text-sm text-muted-foreground italic">
-              AI is thinking...
-            </p>
-          </div>
-        </div>
-      )}
+      {aiGenerating && <AIGeneratingIndicator />}
 
       {/* Typing indicator */}
       <div ref={typingRef}>

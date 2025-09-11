@@ -14,6 +14,8 @@ import {
   clearMessages,
   deleteConversation,
   togglePinConversation,
+  exportConversation,
+  renameGroup,
 } from "../controllers/chatController.js";
 
 const router = express.Router();
@@ -48,6 +50,8 @@ router.get("/conversations/:conversationId/messages", getMessages);
 router.delete("/conversations/:conversationId/messages", clearMessages);
 router.delete("/conversations/:conversationId", deleteConversation);
 router.post("/conversations/:conversationId/pin", togglePinConversation);
+router.get("/conversations/:conversationId/export", exportConversation);
+router.put("/conversations/:conversationId/rename", renameGroup);
 router.post("/messages", sendMessage);
 router.get("/search/users", searchUsers);
 router.get("/search/messages", searchMessages);

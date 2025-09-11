@@ -53,4 +53,19 @@ const messageSchema = new mongoose.Schema(
 
 messageSchema.index({ conversation: 1, createdAt: -1 });
 
+// Reply reference
+messageSchema.add({
+  replyTo: { type: mongoose.Schema.Types.ObjectId, ref: "Message" },
+});
+
+// Reactions: array of { emoji, users: [ObjectId] }
+messageSchema.add({
+  reactions: [
+    {
+      emoji: { type: String },
+      users: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+    },
+  ],
+});
+
 export default mongoose.model("Message", messageSchema);
