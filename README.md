@@ -35,7 +35,12 @@ AI assistant, export, and granular preferences.
 - Export chat (JSON download)
 - About modal with quick links (README, Vercel, Render, License)
 - Group info modal with member list and rename (real‑time update)
-- Reply to messages (reply header + content) and quick reactions (👍 ❤️)
+- Reply to messages for text and images (WhatsApp‑like):
+  - Inline reply preview with username + snippet
+  - Image replies show tiny thumbnail previews (Cloudinary optimized)
+  - Optimistic messages auto‑replace with server‑enriched payload via socket
+- Premium inline reaction bar (Reply, 👍, ❤️) with framer‑motion animations
+- AI Chat UX: reply and reactions hidden in AI conversations for clarity
 - Unseen message sync: unread badges update in real time across sessions
 - Settings: Appearance toggle, Sound/Vibration switches
 - Change password modal (server endpoint wired)
@@ -54,6 +59,7 @@ AI assistant, export, and granular preferences.
 - **React Hook Form** for form handling
 - **React Hot Toast** for notifications
 - **Lucide React** for icons
+- **Framer Motion** for micro‑interactions (reaction bar animations)
 
 ### Backend
 
@@ -74,7 +80,7 @@ AI assistant, export, and granular preferences.
 
 - Node.js (v18 or higher)
 - MongoDB (local or cloud)
-- OpenAI API key (for AI chat)
+- OpenAI/OpenRouter API key (for AI chat)
 - Email service credentials (Gmail recommended)
 
 ### Backend Setup
@@ -147,6 +153,21 @@ AI assistant, export, and granular preferences.
    npm run dev
    ```
 
+If you see a Vite "Outdated Optimize Dep" or 504 on module fetch, clear cache:
+
+```bash
+rm -rf node_modules/.vite
+npm run dev -- --force
+```
+
+If it persists:
+
+```bash
+rm -rf node_modules package-lock.json
+npm install
+npm run dev -- --force
+```
+
 ## 🚀 Usage
 
 1. **Register a new account** with email verification
@@ -170,9 +191,9 @@ AI assistant, export, and granular preferences.
 
 ### OpenAI Setup
 
-1. Create an account at [OpenAI](https://openai.com)
+1. Create an account at [OpenAI](https://openai.com) or use OpenRouter
 2. Generate an API key from the dashboard
-3. Add the key to `OPENAI_API_KEY` in your `.env`
+3. Add the key to `OPENAI_API_KEY` (or relevant) in your `.env`
 
 ### MongoDB Setup
 
@@ -205,13 +226,16 @@ The app uses a minimal 5-color palette:
 - **Typing indicators** with auto-timeout
 - **Message delivery** status
 - **Real-time notifications**
+- **Optimistic messages** with temp IDs auto‑reconciled on `newMessage`
+- **De‑duplication**: stale/optimistic copies replaced by server messages
+- **Reply previews** are populated in realtime without refresh
 
-### AI Integration
+### Replies & Reactions
 
-- **OpenAI GPT-3.5** integration
-- **Context-aware** responses
-- **Conversation history** for better responses
-- **Fallback handling** for API errors
+- Reply to both text and image messages with inline, compact previews
+- Tiny image thumbnails generated via Cloudinary transformations
+- Sleek inline reaction bar (Reply, 👍, ❤️) with hover/tap animations
+- Disabled automatically in AI conversations
 
 ## 🔒 Security Features
 
@@ -237,6 +261,15 @@ The app uses a minimal 5-color palette:
 1. Update `VITE_API_URL` to your backend URL
 2. Build the project: `npm run build`
 3. Deploy to Vercel, Netlify, or your preferred platform
+
+## 🧩 Notable Implementation Details
+
+- Messages use optimistic updates with `temp-<timestamp>` IDs.
+- Socket `newMessage` replaces an existing item by `_id`, or reconciles a
+  matching optimistic message (by `temp-*` + content) to avoid duplicates.
+- Reply preview enrichment is preserved client‑side if server payload has only
+  a reply ID; it merges the local data so previews don’t flicker.
+- Cloudinary image thumbnails are generated on the fly for reply strips.
 
 ## 🤝 Contributing
 

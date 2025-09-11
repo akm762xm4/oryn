@@ -1,6 +1,6 @@
 import { memo } from "react";
 import { formatDistanceToNow, format } from "date-fns";
-import { Button, Avatar } from "./ui";
+import { Avatar } from "./ui";
 import {
   Check,
   CheckCheck,

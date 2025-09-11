@@ -6,9 +6,12 @@ export interface CleanupFunction {
 
 class MemoryManager {
   private cleanupTasks: Map<string, CleanupFunction[]> = new Map();
-  private intervalRefs: Map<string, number> = new Map();
-  private timeoutRefs: Map<string, number> = new Map();
-  private eventListeners: Map<string, { element: EventTarget; event: string; handler: EventListener }[]> = new Map();
+  private intervalRefs: Map<string, ReturnType<typeof setInterval>> = new Map();
+  private timeoutRefs: Map<string, ReturnType<typeof setTimeout>> = new Map();
+  private eventListeners: Map<
+    string,
+    { element: EventTarget; event: string; handler: EventListener }[]
+  > = new Map();
 
   // Register cleanup tasks for a component
   registerCleanup(componentId: string, cleanup: CleanupFunction) {
@@ -19,32 +22,43 @@ class MemoryManager {
   }
 
   // Register an interval for cleanup
-  registerInterval(componentId: string, intervalRef: number) {
+  registerInterval(
+    componentId: string,
+    intervalRef: ReturnType<typeof setInterval>
+  ) {
     this.intervalRefs.set(`${componentId}-${Date.now()}`, intervalRef);
-    
+
     this.registerCleanup(componentId, () => {
       clearInterval(intervalRef);
     });
   }
 
   // Register a timeout for cleanup
-  registerTimeout(componentId: string, timeoutRef: number) {
+  registerTimeout(
+    componentId: string,
+    timeoutRef: ReturnType<typeof setTimeout>
+  ) {
     this.timeoutRefs.set(`${componentId}-${Date.now()}`, timeoutRef);
-    
+
     this.registerCleanup(componentId, () => {
       clearTimeout(timeoutRef);
     });
   }
 
   // Register event listeners for cleanup
-  registerEventListener(componentId: string, element: EventTarget, event: string, handler: EventListener) {
+  registerEventListener(
+    componentId: string,
+    element: EventTarget,
+    event: string,
+    handler: EventListener
+  ) {
     if (!this.eventListeners.has(componentId)) {
       this.eventListeners.set(componentId, []);
     }
-    
+
     this.eventListeners.get(componentId)!.push({ element, event, handler });
     element.addEventListener(event, handler);
-    
+
     this.registerCleanup(componentId, () => {
       element.removeEventListener(event, handler);
     });
@@ -54,7 +68,7 @@ class MemoryManager {
   cleanup(componentId: string) {
     const tasks = this.cleanupTasks.get(componentId);
     if (tasks) {
-      tasks.forEach(task => {
+      tasks.forEach((task) => {
         try {
           task();
         } catch (error) {
@@ -93,7 +107,10 @@ class MemoryManager {
       cleanupTasks: this.cleanupTasks.size,
       intervals: this.intervalRefs.size,
       timeouts: this.timeoutRefs.size,
-      eventListeners: Array.from(this.eventListeners.values()).reduce((sum, arr) => sum + arr.length, 0),
+      eventListeners: Array.from(this.eventListeners.values()).reduce(
+        (sum, arr) => sum + arr.length,
+        0
+      ),
     };
   }
 }
@@ -121,7 +138,11 @@ export function useMemoryCleanup(componentName: string) {
     return timeoutRef;
   };
 
-  const registerEventListener = (element: EventTarget, event: string, handler: EventListener) => {
+  const registerEventListener = (
+    element: EventTarget,
+    event: string,
+    handler: EventListener
+  ) => {
     memoryManager.registerEventListener(componentId, element, event, handler);
   };
 
@@ -148,13 +169,13 @@ export function createDebouncedFunction<T extends (...args: any[]) => any>(
   delay: number,
   componentId?: string
 ): T & { cancel: () => void } {
-  let timeoutId: number | null = null;
-  
+  let timeoutId: ReturnType<typeof setTimeout> | null = null;
+
   const debouncedFn = ((...args: Parameters<T>) => {
     if (timeoutId) {
       clearTimeout(timeoutId);
     }
-    
+
     timeoutId = setTimeout(() => {
       fn(...args);
       timeoutId = null;
@@ -183,12 +204,12 @@ export function createThrottledFunction<T extends (...args: any[]) => any>(
   componentId?: string
 ): T & { cancel: () => void } {
   let lastCallTime = 0;
-  let timeoutId: number | null = null;
-  
+  let timeoutId: ReturnType<typeof setTimeout> | null = null;
+
   const throttledFn = ((...args: Parameters<T>) => {
     const now = Date.now();
     const timeSinceLastCall = now - lastCallTime;
-    
+
     if (timeSinceLastCall >= delay) {
       fn(...args);
       lastCallTime = now;
@@ -196,7 +217,7 @@ export function createThrottledFunction<T extends (...args: any[]) => any>(
       if (timeoutId) {
         clearTimeout(timeoutId);
       }
-      
+
       timeoutId = setTimeout(() => {
         fn(...args);
         lastCallTime = Date.now();

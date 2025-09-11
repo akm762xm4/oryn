@@ -1,4 +1,4 @@
-import { ReactNode, useEffect, useRef, useState } from "react";
+import { type ReactNode, useEffect, useRef, useState } from "react";
 
 interface DropdownMenuProps {
   trigger: ReactNode;
@@ -19,11 +19,11 @@ interface DropdownMenuSeparatorProps {
   children?: ReactNode;
 }
 
-export function DropdownMenu({ 
-  trigger, 
-  children, 
+export function DropdownMenu({
+  trigger,
+  children,
   align = "right",
-  className = ""
+  className = "",
 }: DropdownMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -46,36 +46,34 @@ export function DropdownMenu({
 
   const alignmentClasses = {
     left: "left-0",
-    right: "right-0"
+    right: "right-0",
   };
 
   return (
     <div className="relative" ref={menuRef}>
-      <div onClick={() => setIsOpen(!isOpen)}>
-        {trigger}
-      </div>
-      
+      <div onClick={() => setIsOpen(!isOpen)}>{trigger}</div>
+
       {isOpen && (
-        <div className={`
+        <div
+          className={`
           absolute ${alignmentClasses[align]} top-full mt-2 w-64 
           bg-background border border-border rounded-lg shadow-lg z-50
           ${className}
-        `}>
-          <div className="py-2">
-            {children}
-          </div>
+        `}
+        >
+          <div className="py-2">{children}</div>
         </div>
       )}
     </div>
   );
 }
 
-export function DropdownMenuItem({ 
-  children, 
-  onClick, 
-  icon, 
+export function DropdownMenuItem({
+  children,
+  onClick,
+  icon,
   destructive = false,
-  disabled = false 
+  disabled = false,
 }: DropdownMenuItemProps) {
   const handleClick = () => {
     if (onClick && !disabled) {
@@ -103,7 +101,9 @@ export function DropdownMenuItem({
   );
 }
 
-export function DropdownMenuSeparator({ children }: DropdownMenuSeparatorProps) {
+export function DropdownMenuSeparator({
+  children,
+}: DropdownMenuSeparatorProps) {
   if (children) {
     return (
       <div className="px-4 pt-3 pb-1 text-xs uppercase tracking-wide text-muted-foreground">
@@ -111,6 +111,6 @@ export function DropdownMenuSeparator({ children }: DropdownMenuSeparatorProps) 
       </div>
     );
   }
-  
+
   return <div className="border-t border-border my-1" />;
 }
