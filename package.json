@@ -32,6 +32,7 @@
     "remark-gfm": "^4.0.1",
     "socket.io-client": "^4.7.4",
     "tailwindcss": "^4.1.12",
+    "terser": "^5.44.0",
     "zustand": "^4.4.7"
   },
   "devDependencies": {
