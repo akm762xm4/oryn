@@ -23,7 +23,6 @@ export default function BackgroundSlice({
   startAngle,
   endAngle,
   radius,
-  strokeWidth,
 }: BackgroundSliceProps) {
   // Convert angles to radians
   const startAngleRad = (startAngle * Math.PI) / 180;
