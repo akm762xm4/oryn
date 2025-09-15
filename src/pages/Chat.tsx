@@ -40,7 +40,7 @@ export default function Chat() {
     activeConversation,
     setConversations,
     setActiveConversation,
-    addMessage,
+
     clearReplyTo,
     setUserOnline,
     setUserOffline,
@@ -103,7 +103,7 @@ export default function Chat() {
     if (!token || !user || !isAuthenticated) return;
 
     // Connect to socket only once
-    const socket = socketService.connect(token);
+    socketService.connect(token);
 
     return () => {
       socketService.disconnect();

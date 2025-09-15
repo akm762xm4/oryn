@@ -17,7 +17,7 @@ export default function ChatArea({ showBackButton = false }: ChatAreaProps) {
   const [showAbout, setShowAbout] = useState(false);
   const [showGroupInfo, setShowGroupInfo] = useState(false);
 
-  const { messages, activeConversation } = useChatStore();
+  const { activeConversation } = useChatStore();
 
   useEffect(() => {
     const handler = () => setShowMedia(true);

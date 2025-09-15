@@ -4,7 +4,7 @@ import type { AuthState, User } from "../types";
 
 export const useAuthStore = create<AuthState>()(
   persist(
-    (set, get) => ({
+    (set) => ({
       user: null,
       token: null,
       isAuthenticated: false,
