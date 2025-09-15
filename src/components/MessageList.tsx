@@ -269,7 +269,7 @@ const MessageList = memo(function MessageList() {
   if (messages.length === 0 && !isInitialLoading) {
     return (
       <div
-        className={`flex flex-1 items-center justify-center p-8 ${
+        className={`flex flex-1 items-center justify-center md:p-8 p-10 ${
           currentBackground.isImage
             ? ""
             : isTheme
@@ -298,10 +298,10 @@ const MessageList = memo(function MessageList() {
             src="/EmptyMsgState.png"
             alt="Empty Message State"
           />
-          <h3 className="text-xl font-semibold text-foreground mb-2">
+          <h3 className="md:text-xl text-lg font-semibold text-secondary-foreground/90 mb-2">
             No messages yet
           </h3>
-          <p className="text-muted-foreground">
+          <p className="md:text-sm text-xs text-secondary-foreground/70">
             Say hello to start the conversation. Your messages will appear here.
           </p>
         </div>
@@ -312,7 +312,7 @@ const MessageList = memo(function MessageList() {
   return (
     <div
       ref={messagesContainerRef}
-      className={`relative flex flex-col flex-1 overflow-y-auto p-4 space-y-4 ${
+      className={`relative flex flex-col flex-1 overflow-y-auto md:p-4 p-2 md:space-y-4 space-y-2 ${
         currentBackground.isImage ? "" : isTheme ? "" : currentBackground.value
       }`}
       style={

@@ -56,28 +56,34 @@ export default function Modal({
     >
       <div
         ref={modalRef}
-        className={`bg-background rounded-2xl w-full ${sizeClasses[size]} border border-border shadow-lg ${className}`}
+        className={`bg-background rounded-2xl w-full ${sizeClasses[size]} border border-border shadow-2xl shadow-accent  ${className}`}
         onClick={(e) => e.stopPropagation()}
       >
         {(title || showCloseButton) && (
-          <div className="flex items-center justify-between p-6 pb-4">
-            {title && <h2 className="text-lg font-semibold">{title}</h2>}
+          <div className="flex items-center justify-between md:p-6 p-4 md:pb-4 pb-2 border-b border-border md:mb-3 mb-2">
+            {title && (
+              <h2 className="md:text-lg text-base font-semibold">{title}</h2>
+            )}
             {showCloseButton && (
               <Button
                 type="button"
                 size="sm"
                 variant="ghost"
                 onClick={onClose}
-                className="p-1 rounded-lg hover:bg-muted transition-colors"
+                className="md:p-1 p-0.5 rounded-lg hover:bg-muted transition-colors"
                 aria-label="Close modal"
               >
-                <X className="w-5 h-5" />
+                <X className="md:w-5 md:h-5 w-4 h-4" />
               </Button>
             )}
           </div>
         )}
 
-        <div className={title || showCloseButton ? "px-6 pb-6" : "p-6"}>
+        <div
+          className={
+            title || showCloseButton ? "md:px-6 px-4 md:pb-6 pb-4" : "p-6"
+          }
+        >
           {children}
         </div>
       </div>

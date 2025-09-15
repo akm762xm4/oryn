@@ -1,9 +1,11 @@
-import { Check } from "lucide-react";
-import { Modal, Button } from "./ui";
+import { useState, useEffect } from "react";
+import { motion } from "framer-motion";
+import { Modal } from "./ui";
 import {
   useBackgroundStore,
   backgroundOptions,
 } from "../stores/backgroundStore";
+import BackgroundSlice from "./BackgroundSlice";
 
 interface BackgroundModalProps {
   isOpen: boolean;
@@ -15,82 +17,146 @@ export default function BackgroundModal({
   onClose,
 }: BackgroundModalProps) {
   const { selectedBackground, setBackground } = useBackgroundStore();
+  const [selectedBackgroundData, setSelectedBackgroundData] = useState(
+    backgroundOptions.find((bg) => bg.id === selectedBackground) ||
+      backgroundOptions[0]
+  );
 
-  const handleBackgroundSelect = (backgroundId: string) => {
-    setBackground(backgroundId);
-    onClose();
+  // Update selected background data when store changes
+  useEffect(() => {
+    const background = backgroundOptions.find(
+      (bg) => bg.id === selectedBackground
+    );
+    if (background) {
+      setSelectedBackgroundData(background);
+    }
+  }, [selectedBackground]);
+
+  const handleSliceClick = (background: (typeof backgroundOptions)[0]) => {
+    setSelectedBackgroundData(background);
+    setBackground(background.id);
   };
 
+  // Calculate responsive dimensions
+  const getDimensions = () => {
+    const isMobile = window.innerWidth < 768;
+    return {
+      radius: isMobile ? 100 : 140,
+      strokeWidth: isMobile ? 6 : 8,
+      centerSize: isMobile ? 60 : 80,
+    };
+  };
+
+  const [dimensions, setDimensions] = useState(getDimensions());
+
+  useEffect(() => {
+    const handleResize = () => setDimensions(getDimensions());
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  const { radius, strokeWidth } = dimensions;
+  const centerRadius = radius - strokeWidth / 2;
+  const sliceAngle = 360 / backgroundOptions.length;
+
   return (
-    <Modal 
-      isOpen={isOpen} 
-      onClose={onClose} 
-      title="Chat Backgrounds" 
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title="Chat Backgrounds"
       size="xl"
       className="max-h-[85vh] overflow-hidden"
     >
-      <div className="space-y-6">
-        <p className="text-muted-foreground">
+      <div className="md:space-y-6 space-y-4">
+        <p className="md:text-sm text-xs text-muted-foreground ">
           Choose a background for your chat conversations
         </p>
 
-        <div className="grid grid-cols-2 gap-3">
-          {backgroundOptions.map((background) => (
-            <Button
-              key={background.id}
-              variant="ghost"
-              onClick={() => handleBackgroundSelect(background.id)}
-              className={`relative h-auto p-4 rounded-lg border-2 transition-colors hover:scale-[1.02] ${
-                selectedBackground === background.id
-                  ? "border-primary bg-primary/5"
-                  : "border-border hover:border-primary/50"
-              }`}
+        {/* Donut Chart */}
+        <div className="flex justify-center">
+          <div className="relative">
+            <svg
+              width={radius * 2}
+              height={radius * 2}
+              className="drop-shadow-lg"
             >
-                <div className="flex sm:flex-row flex-col items-start space-x-3">
-                  {/* Background Preview */}
-                  <div
-                    className="w-12 h-12 rounded-lg border border-border overflow-hidden"
-                    style={{
-                      background: background.isImage
-                        ? `${background.preview} center/cover no-repeat`
-                        : background.preview,
-                    }}
-                  >
-                    {background.id === "default" && (
-                      <div className="w-full h-full bg-background border border-border/50" />
-                    )}
-                  </div>
+              {/* Background slices - now hollow donut */}
+              {backgroundOptions.map((background, index) => {
+                const startAngle = index * sliceAngle;
+                const endAngle = (index + 1) * sliceAngle;
+                const isSelected = selectedBackgroundData.id === background.id;
 
-                  {/* Background Info */}
-                  <div className="text-left">
-                    <h3 className="font-medium text-foreground">
-                      {background.name}
-                    </h3>
-                    <p className="text-xs sm:text-sm text-muted-foreground">
-                      {background.id === "default"
-                        ? "System default background"
-                        : background.isImage
-                        ? "Custom image background"
-                        : (background as any).isTheme
-                        ? "Theme with gradient + custom bubbles"
-                        : "Beautiful gradient background"}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Selected Indicator */}
-                {selectedBackground === background.id && (
-                  <div className="absolute flex-shrink-0  top-2 right-2">
-                    <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center">
-                      <Check className="w-4 h-4 text-primary-foreground" />
-                    </div>
-                  </div>
-                )}
-            </Button>
-          ))}
+                return (
+                  <BackgroundSlice
+                    key={background.id}
+                    background={background}
+                    selected={isSelected}
+                    onClick={() => handleSliceClick(background)}
+                    startAngle={startAngle}
+                    endAngle={endAngle}
+                    radius={centerRadius}
+                    strokeWidth={strokeWidth}
+                  />
+                );
+              })}
+            </svg>
           </div>
+        </div>
 
-        <div className="pt-4 border-t border-border">
+        {/* Preview with animated background info */}
+        <div className="space-y-3">
+          {/* Animated background preview */}
+          <motion.div
+            key={selectedBackgroundData.id}
+            initial={{ scale: 0.8, opacity: 0, y: 20 }}
+            animate={{ scale: 1, opacity: 1, y: 0 }}
+            transition={{
+              type: "spring",
+              stiffness: 400,
+              damping: 25,
+              duration: 0.3,
+            }}
+            className="space-y-3"
+          >
+            {/* Background preview */}
+            <div
+              className="md:h-16 h-12 rounded-lg border border-border overflow-hidden flex items-center justify-center"
+              style={{
+                background: selectedBackgroundData.isImage
+                  ? `${selectedBackgroundData.preview} center/cover no-repeat`
+                  : selectedBackgroundData.preview,
+              }}
+            ></div>
+
+            {/* Background info with pop animation */}
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{
+                type: "spring",
+                stiffness: 500,
+                damping: 30,
+                delay: 0.1,
+              }}
+              className="text-center space-y-1"
+            >
+              <h3 className="font-bold text-foreground text-base">
+                {selectedBackgroundData.name}
+              </h3>
+              <p className="text-sm text-muted-foreground">
+                {selectedBackgroundData.id === "default"
+                  ? "System default background"
+                  : selectedBackgroundData.isImage
+                  ? "Custom image background"
+                  : (selectedBackgroundData as any).isTheme
+                  ? "Theme with gradient + custom bubbles"
+                  : "Beautiful gradient background"}
+              </p>
+            </motion.div>
+          </motion.div>
+        </div>
+
+        <div className="md:pt-4 pt-2 border-t border-border">
           <p className="text-xs text-muted-foreground text-center">
             Background changes will apply to all conversations
           </p>

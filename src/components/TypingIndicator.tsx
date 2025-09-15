@@ -73,7 +73,7 @@ const TypingIndicator = memo(function TypingIndicator({
           transitionDelay: isVisible ? "150ms" : "0ms",
         }}
       >
-        <p className="text-sm text-muted-foreground italic">
+        <p className="md:text-sm text-xs text-muted-foreground italic">
           {getTypingText()}...
         </p>
       </div>

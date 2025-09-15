@@ -103,7 +103,7 @@ const ConversationList = memo(function ConversationList({
   if (conversations.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center p-8 md:p-8 px-6 text-center">
-        <div className="w-20 h-20 md:w-16 md:h-16 bg-muted rounded-full flex items-center justify-center mb-6 md:mb-4">
+        <div className="md:w-20 md:h-20 w-16 h-16 bg-muted rounded-full flex items-center justify-center mb-6 md:mb-4">
           <Users className="w-10 h-10 md:w-8 md:h-8 text-muted-foreground" />
         </div>
         <h3 className="text-xl md:text-lg font-semibold md:font-medium text-foreground mb-3 md:mb-2">
@@ -142,7 +142,7 @@ const ConversationList = memo(function ConversationList({
             key={conversation._id}
             type="button"
             onClick={() => handleConversationClick(conversation)}
-            className={`z-0 relative w-full p-4 md:p-3 rounded-xl md:rounded-lg text-left transition-colors touch-manipulation ${
+            className={`z-0 relative w-full md:p-4 p-2.5 rounded-xl md:rounded-lg text-left transition-colors touch-manipulation ${
               isActive
                 ? "bg-primary text-white shadow-md"
                 : "hover:bg-muted active:bg-muted/80"
@@ -150,15 +150,15 @@ const ConversationList = memo(function ConversationList({
           >
             <Pin
               fill="currentColor"
-              className={`z-10 rotate-30 absolute -top-1 -right-1 w-5 h-5 text-yellow-500  ${
+              className={`z-10 rotate-30 absolute -top-1 -right-1 md:w-5 md:h-5 w-4 h-4 text-yellow-500  ${
                 conversation.pinnedAt ? "opacity-100" : "opacity-0"
               }`}
             />
-            <div className="flex items-center space-x-4 md:space-x-3">
+            <div className="flex items-center space-x-2.5 md:space-x-4">
               {/* Avatar */}
               <div className="relative">
                 <div
-                  className={`w-14 h-14 md:w-12 md:h-12 rounded-full flex items-center justify-center border ${
+                  className={`md:w-14 md:h-14 w-12 h-12 rounded-full flex items-center justify-center border ${
                     isAI
                       ? "bg-gradient-to-br from-purple-500 to-blue-600"
                       : avatar
@@ -167,7 +167,7 @@ const ConversationList = memo(function ConversationList({
                   }`}
                 >
                   {isAI ? (
-                    <Bot className="w-7 h-7 md:w-6 md:h-6 text-white" />
+                    <Bot className="md:w-7 md:h-7 w-5.5 h-5.5 text-white" />
                   ) : avatar ? (
                     <img
                       src={avatar}
@@ -175,7 +175,7 @@ const ConversationList = memo(function ConversationList({
                       className="w-full h-full rounded-full object-cover"
                     />
                   ) : (
-                    <span className="text-white font-medium text-xl md:text-lg">
+                    <span className="text-white font-medium md:text-xl text-lg">
                       {name.charAt(0).toUpperCase()}
                     </span>
                   )}
@@ -183,12 +183,12 @@ const ConversationList = memo(function ConversationList({
 
                 {/* Online indicator */}
                 {isOnline && !isAI && (
-                  <div className="absolute -bottom-1 -right-1 w-5 h-5 md:w-4 md:h-4 bg-green-500 border-2 border-background rounded-full"></div>
+                  <div className="absolute -bottom-1 -right-1 md:w-5 md:h-5 w-4 h-4 bg-green-500 border-2 border-background rounded-full"></div>
                 )}
 
                 {/* AI indicator */}
                 {isAI && (
-                  <div className="absolute -bottom-1 -right-1 w-5 h-5 md:w-4 md:h-4 bg-gradient-to-br from-purple-500 to-blue-600 border-2 border-background rounded-full flex items-center justify-center">
+                  <div className="absolute -bottom-1 -right-1 md:w-5 md:h-5 w-4 h-4 bg-gradient-to-br from-purple-500 to-blue-600 border-2 border-background rounded-full flex items-center justify-center">
                     <div className="absolute bottom-0.5 right-0.5 w-2 h-2  bg-white rounded-full animate-pulse"></div>
                   </div>
                 )}
@@ -196,22 +196,22 @@ const ConversationList = memo(function ConversationList({
 
               {/* Content */}
               <div className="flex-1 min-w-0">
-                <div className="flex items-center justify-between mb-2 md:mb-1">
+                <div className="flex items-center justify-between md:mb-2 mb-1">
                   <h3
-                    className={`font-semibold md:font-medium text-base md:text-sm truncate ${
+                    className={`md:font-semibold font-medium md:text-base text-sm truncate ${
                       isActive ? "text-white" : "text-foreground"
                     }`}
                   >
                     {name}
                     {conversation.isGroup && (
-                      <span className="ml-1 text-sm md:text-xs opacity-75">
+                      <span className="ml-1 md:text-sm text-xs opacity-75">
                         ({conversation.participants.length})
                       </span>
                     )}
                   </h3>
                   {conversation.lastMessage && (
                     <span
-                      className={`text-sm md:text-xs font-medium md:font-normal ${
+                      className={`md:text-sm text-xs md:font-medium font-normal ${
                         isActive ? "text-muted" : "text-muted-foreground"
                       }`}
                     >
@@ -221,7 +221,7 @@ const ConversationList = memo(function ConversationList({
                 </div>
 
                 <p
-                  className={`text-sm md:text-sm truncate leading-relaxed ${
+                  className={`md:text-sm text-sm truncate leading-relaxed ${
                     isActive ? "text-muted" : "text-muted-foreground"
                   }`}
                 >

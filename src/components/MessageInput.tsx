@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import Button from "./ui/Button";
-import { Send, Image } from "lucide-react";
+import { Send, Image, X } from "lucide-react";
 import { useChatStore } from "../stores/chatStore";
 import { useAuthStore } from "../stores/authStore";
 import { socketService } from "../lib/socket";
@@ -314,13 +314,12 @@ export default function MessageInput() {
           <Button
             type="button"
             variant="ghost"
-            size="sm"
-            className="ml-2 px-2"
+            size="icon"
             onClick={clearReplyTo}
             aria-label="Cancel reply"
             title="Cancel reply"
           >
-            ✕
+            <X className="md:w-5 md:h-5 w-4 h-4" />
           </Button>
         </div>
       )}
@@ -338,7 +337,7 @@ export default function MessageInput() {
                   : "hover:bg-muted active:bg-muted/80 cursor-pointer"
               }`}
             >
-              <Image className="w-6 h-6 md:w-7 md:h-7 text-muted-foreground" />
+              <Image className="w-5 h-5 md:w-7 md:h-7 text-muted-foreground" />
               <input
                 title="image-upload"
                 type="file"
@@ -367,12 +366,13 @@ export default function MessageInput() {
         <Button
           type="submit"
           variant="primary"
-          size="lg"
-          className="flex-shrink-0 p-3 md:p-4 rounded-full shadow-md"
+          size="icon"
+          className=""
           disabled={!message.trim() || isSending}
           isLoading={isSending}
         >
-          {!isSending && <Send className="w-5 h-5 md:w-6 md:h-6" />}
+          {/* {isSending && } */}
+          <Send className="w-4 h-4 md:w-5 md:h-5" />
         </Button>
       </form>
 

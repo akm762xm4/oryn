@@ -54,27 +54,27 @@ export default function AboutModal({ isOpen, onClose }: AboutModalProps) {
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="About Oryn" size="lg">
-      <div className="space-y-4">
+      <div className="md:space-y-4 space-y-3 ">
         {/* Header with logo */}
-        <div className="flex items-center space-x-4">
-          <Avatar src="/oryn.png" name="Oryn" size="lg" />
+        <div className="flex items-center md:space-x-4 space-x-3">
+          <Avatar src="/oryn.png" name="Oryn" size="md" />
           <div>
-            <h3 className="text-lg font-semibold">Oryn</h3>
-            <p className="text-sm text-muted-foreground">
+            <h3 className="md:text-lg text-sm font-semibold">Oryn</h3>
+            <p className="md:text-sm text-xs text-muted-foreground">
               A lightweight chat app — frontend + backend example project.
             </p>
           </div>
         </div>
 
         {/* Links grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 md:grid-cols-2 md:gap-3 gap-2">
           {links.map((l) => (
             <div
               key={l.id}
-              className="relative flex items-center justify-between p-3 rounded-lg bg-muted/20 hover:bg-muted/40 transition-colors"
+              className="relative flex items-center justify-between md:p-3 p-2 rounded-lg bg-muted/20 hover:bg-muted/40 transition-colors"
             >
-              <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 rounded-md bg-background flex items-center justify-center text-xl">
+              <div className="flex items-center md:space-x-3 space-x-2 ">
+                <div className="md:w-10 w-9 md:h-10 h-9 rounded-md bg-background flex items-center justify-center text-xl">
                   <span aria-hidden>{l.icon}</span>
                 </div>
                 <div className="min-w-0">
@@ -85,22 +85,22 @@ export default function AboutModal({ isOpen, onClose }: AboutModalProps) {
                 </div>
               </div>
 
-              <div className="absolute right-0 top-0 flex items-center space-x-2">
+              <div className="absolute right-0 top-0 flex items-center md:space-x-2 space-x-1.5">
                 <a
                   href={l.url}
                   target="_blank"
                   rel="noreferrer"
-                  className="p-2"
+                  className="md:p-2 p-1.5"
                   title={`Open ${l.title}`}
                 >
-                  <ExternalLink className="w-4 h-4" />
+                  <ExternalLink className="md:w-4 md:h-4 h-3 w-3" />
                 </a>
               </div>
             </div>
           ))}
         </div>
 
-        <div className="mt-2 pt-2 border-t border-border text-muted-foreground text-sm">
+        <div className="mt-2 pt-2 border-t border-border text-muted-foreground md:text-sm text-xs">
           <p>
             Oryn is an example MERN chat app showcasing real-time messaging,
             file uploads, OTP verification, and a clean UI built with React +

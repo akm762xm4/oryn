@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { Search, Users, User } from "lucide-react";
 import { useAuthStore } from "../stores/authStore";
 import { useChatStore } from "../stores/chatStore";
+
 import {
   Modal,
   Button,
@@ -12,6 +13,7 @@ import {
 } from "./ui";
 import api from "../lib/api";
 import toast from "react-hot-toast";
+import { useNavigate } from "react-router";
 
 interface NewChatModalProps {
   isOpen: boolean;
@@ -34,6 +36,8 @@ export default function NewChatModal({ isOpen, onClose }: NewChatModalProps) {
   const [isGroup, setIsGroup] = useState(false);
   const [groupName, setGroupName] = useState("");
   const [isCreating, setIsCreating] = useState(false);
+  const navigate = useNavigate();
+  const isMobile = window.innerWidth < 768;
 
   const { user } = useAuthStore();
   const { setActiveConversation, conversations, setConversations } =
@@ -103,6 +107,10 @@ export default function NewChatModal({ isOpen, onClose }: NewChatModalProps) {
         );
 
         if (existing) {
+          //navigate also when on mobile screen
+          if (isMobile) {
+            navigate(`/chat/${existing._id}`);
+          }
           setActiveConversation(existing);
           toast.success("Opened existing chat");
           onClose();
@@ -180,13 +188,13 @@ export default function NewChatModal({ isOpen, onClose }: NewChatModalProps) {
     >
       <div className="flex flex-col h-full">
         {/* Chat type toggle */}
-        <div className="p-4 border-b border-border">
-          <div className="flex space-x-2">
+        <div className="md:p-4 p-2 border-b border-border">
+          <div className="flex md:space-x-2 space-x-1">
             <Button
               type="button"
-              variant={!isGroup ? "primary" : "ghost"}
+              variant={!isGroup ? "primary" : "secondary"}
               onClick={() => setIsGroup(false)}
-              className={`flex-1 flex items-center justify-center space-x-2 py-2 px-4 rounded-lg transition-colors ${
+              className={`rounded-lg transition-colors ${
                 !isGroup
                   ? "bg-primary text-white"
                   : "bg-muted text-muted-foreground hover:bg-muted/80"
@@ -197,9 +205,9 @@ export default function NewChatModal({ isOpen, onClose }: NewChatModalProps) {
             </Button>
             <Button
               type="button"
-              variant={isGroup ? "primary" : "ghost"}
+              variant={isGroup ? "primary" : "secondary"}
               onClick={() => setIsGroup(true)}
-              className={`flex-1 flex items-center justify-center space-x-2 py-2 px-4 rounded-lg transition-colors ${
+              className={`rounded-lg transition-colors ${
                 isGroup
                   ? "bg-primary text-white"
                   : "bg-muted text-muted-foreground hover:bg-muted/80"
@@ -219,6 +227,7 @@ export default function NewChatModal({ isOpen, onClose }: NewChatModalProps) {
               placeholder="Enter group name"
               value={groupName}
               onChange={(e) => setGroupName(e.target.value)}
+              className="py-3 md:py-3.5 md:text-sm text-xs"
             />
           </div>
         )}
@@ -231,16 +240,17 @@ export default function NewChatModal({ isOpen, onClose }: NewChatModalProps) {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             leftIcon={<Search className="w-4 h-4" />}
+            className="py-3 md:py-3.5 md:text-sm text-xs"
           />
         </div>
 
         {/* Selected users */}
         {selectedUsers.length > 0 && (
-          <div className="p-4 border-b border-border">
-            <p className="text-sm font-medium text-foreground mb-2">
+          <div className="md:p-4 p-2 border-b border-border">
+            <p className="md:text-sm text-xs font-medium text-foreground md:mb-2 mb-1">
               Selected ({selectedUsers.length})
             </p>
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap md:gap-2 gap-1">
               {selectedUsers.map((selectedUser) => (
                 <SelectedUserTag
                   key={selectedUser._id}
@@ -255,7 +265,7 @@ export default function NewChatModal({ isOpen, onClose }: NewChatModalProps) {
         {/* Search results */}
         <div className="flex-1 overflow-y-auto">
           {isSearching ? (
-            <div className="flex items-center justify-center p-8">
+            <div className="flex items-center justify-center md:p-8 p-4">
               <LoadingSpinner />
             </div>
           ) : searchResults.length > 0 ? (
@@ -270,7 +280,7 @@ export default function NewChatModal({ isOpen, onClose }: NewChatModalProps) {
                     key={searchUser._id}
                     type="button"
                     onClick={() => toggleUserSelection(searchUser)}
-                    className={`w-full p-3 rounded-lg text-left transition-colors ${
+                    className={`w-full md:p-3 p-2 rounded-lg text-left transition-colors ${
                       isSelected
                         ? "bg-primary/10 border border-primary/20"
                         : "hover:bg-muted"
@@ -280,15 +290,15 @@ export default function NewChatModal({ isOpen, onClose }: NewChatModalProps) {
                       <Avatar
                         src={searchUser.avatar}
                         name={searchUser.username}
-                        size="md"
+                        size="sm"
                         isOnline={searchUser.isOnline}
                       />
 
                       <div className="flex-1 min-w-0">
-                        <p className="font-medium text-foreground truncate">
+                        <p className="font-medium text-sm text-foreground truncate">
                           {searchUser.username}
                         </p>
-                        <p className="text-sm text-muted-foreground truncate">
+                        <p className="md:text-sm text-xs text-muted-foreground truncate">
                           {searchUser.email}
                         </p>
                       </div>
@@ -313,7 +323,7 @@ export default function NewChatModal({ isOpen, onClose }: NewChatModalProps) {
           ) : (
             <div className="flex items-center justify-center p-8 text-center">
               <div>
-                <Search className="w-12 h-12 text-muted-foreground mx-auto mb-2" />
+                <Search className="md:w-12 md:h-12 w-10 h-10 text-muted-foreground mx-auto mb-2" />
                 <p className="text-muted-foreground">
                   Search for users to start chatting
                 </p>
@@ -343,7 +353,7 @@ export default function NewChatModal({ isOpen, onClose }: NewChatModalProps) {
               isLoading={isCreating}
               className="flex-1"
             >
-              {isGroup ? "Create Group" : "Start Chat"}
+              {isGroup ? "Create " : "Start Chat"}
             </Button>
           </div>
         </div>

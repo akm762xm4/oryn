@@ -3,6 +3,9 @@ import { io, Socket } from "socket.io-client";
 class SocketService {
   private socket: Socket | null = null;
   private token: string | null = null;
+  private reconnectAttempts = 0;
+  private maxReconnectAttempts = 5;
+  private reconnectDelay = 1000;
 
   connect(token: string) {
     this.token = token;
@@ -17,19 +20,43 @@ class SocketService {
           token: this.token,
         },
         transports: ["polling", "websocket"],
+        timeout: 10000,
+        reconnection: true,
+        reconnectionAttempts: this.maxReconnectAttempts,
+        reconnectionDelay: this.reconnectDelay,
       }
     );
 
     this.socket.on("connect", () => {
       console.log("✅ Socket connected:", this.socket?.id);
+      this.reconnectAttempts = 0;
     });
 
-    this.socket.on("disconnect", () => {
-      console.log("❌ Socket disconnected");
+    this.socket.on("disconnect", (reason) => {
+      console.log("❌ Socket disconnected:", reason);
+      if (reason === "io server disconnect") {
+        // Server disconnected, don't reconnect
+        this.socket?.disconnect();
+      }
     });
 
     this.socket.on("connect_error", (error) => {
       console.error("Connection error:", error);
+      this.reconnectAttempts++;
+
+      if (this.reconnectAttempts >= this.maxReconnectAttempts) {
+        console.error("Max reconnection attempts reached");
+        this.socket?.disconnect();
+      }
+    });
+
+    this.socket.on("reconnect", (attemptNumber) => {
+      console.log("🔄 Socket reconnected after", attemptNumber, "attempts");
+      this.reconnectAttempts = 0;
+    });
+
+    this.socket.on("reconnect_error", (error) => {
+      console.error("Reconnection error:", error);
     });
 
     return this.socket;

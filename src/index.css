@@ -133,14 +133,20 @@
   }
 
   .typing-dot {
-    @apply w-2 h-2 bg-muted-foreground rounded-full;
+    @apply md:w-2 w-1.5 md:h-2 h-1.5 bg-muted-foreground rounded-full;
     animation: typingDotBounce 1.4s ease-in-out infinite both;
     will-change: transform;
   }
 
-  .typing-dot:nth-child(1) { animation-delay: 0ms; }
-  .typing-dot:nth-child(2) { animation-delay: 160ms; }
-  .typing-dot:nth-child(3) { animation-delay: 320ms; }
+  .typing-dot:nth-child(1) {
+    animation-delay: 0ms;
+  }
+  .typing-dot:nth-child(2) {
+    animation-delay: 160ms;
+  }
+  .typing-dot:nth-child(3) {
+    animation-delay: 320ms;
+  }
 
   /* Legacy button classes - use UI components instead */
   .btn-primary {
@@ -155,7 +161,9 @@
 
 /* Essential animations */
 @keyframes typingDotBounce {
-  0%, 80%, 100% {
+  0%,
+  80%,
+  100% {
     transform: scale(0.8) translateY(0);
     opacity: 0.5;
   }
@@ -202,18 +210,25 @@
   @apply text-sm max-w-none;
 }
 
-.prose-ai h1, .prose-ai h2, .prose-ai h3, 
-.prose-ai h4, .prose-ai h5, .prose-ai h6 {
+.prose-ai h1,
+.prose-ai h2,
+.prose-ai h3,
+.prose-ai h4,
+.prose-ai h5,
+.prose-ai h6 {
   @apply text-inherit font-semibold mt-4 mb-2 first:mt-0 text-sm;
 }
 
-.prose-ai h1 { @apply text-base; }
+.prose-ai h1 {
+  @apply text-base;
+}
 
 .prose-ai p {
   @apply text-inherit mb-3 last:mb-0;
 }
 
-.prose-ai ul, .prose-ai ol {
+.prose-ai ul,
+.prose-ai ol {
   @apply mb-3 pl-4;
 }
 

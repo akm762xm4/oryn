@@ -4,6 +4,7 @@ import { useAuthStore } from "../stores/authStore";
 import { useChatStore } from "../stores/chatStore";
 import { usePreferencesStore } from "../stores/preferencesStore";
 import { socketService } from "../lib/socket";
+import { useNetworkStatus } from "../hooks/useNetworkStatus";
 import Sidebar from "../components/Sidebar";
 import ChatArea from "../components/ChatArea";
 import api from "../lib/api";
@@ -13,7 +14,27 @@ export default function Chat() {
   const { conversationId } = useParams();
   const navigate = useNavigate();
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
-  const { user, token, updateUser } = useAuthStore();
+  const { isOnline, wasOffline } = useNetworkStatus();
+  const { user, token, isAuthenticated, updateUser } = useAuthStore();
+
+  // Redirect to login if not authenticated
+  useEffect(() => {
+    if (!isAuthenticated) {
+      navigate("/login");
+    }
+  }, [isAuthenticated, navigate]);
+
+  // Don't render anything if not authenticated
+  if (!isAuthenticated) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-background">
+        <div className="flex flex-col items-center space-y-4">
+          <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+          <span className="text-foreground">Redirecting...</span>
+        </div>
+      </div>
+    );
+  }
   const {
     conversations,
     activeConversation,
@@ -45,8 +66,11 @@ export default function Chat() {
     try {
       const response = await api.get("/chat/conversations");
       setConversations(response.data);
-    } catch {
-      toast.error("Failed to load conversations");
+    } catch (error: any) {
+      // Only show error if it's not a network error
+      if (error.code !== "NETWORK_ERROR" && error.message !== "Network Error") {
+        toast.error("Failed to load conversations");
+      }
     } finally {
       setLoadingConversations(false);
     }
@@ -74,14 +98,37 @@ export default function Chat() {
     }
   }, [conversationId, conversations, setActiveConversation, navigate]);
 
+  // Separate effect for socket connection to prevent re-connection loops
   useEffect(() => {
-    if (!token || !user) return;
+    if (!token || !user || !isAuthenticated) return;
 
-    // Connect to socket
-    socketService.connect(token);
+    // Connect to socket only once
+    const socket = socketService.connect(token);
 
-    // Load initial conversations
+    return () => {
+      socketService.disconnect();
+    };
+  }, [token, user, isAuthenticated]);
+
+  // Separate effect for loading conversations
+  useEffect(() => {
+    if (!token || !user || !isOnline || !isAuthenticated) return;
     loadConversations();
+  }, [token, user, loadConversations, isOnline, isAuthenticated]);
+
+  // Handle network reconnection
+  useEffect(() => {
+    if (isOnline && wasOffline && token && user && isAuthenticated) {
+      // Reconnect socket and reload conversations when back online
+      socketService.connect(token);
+      loadConversations();
+      toast.success("Connection restored");
+    }
+  }, [isOnline, wasOffline, token, user, loadConversations, isAuthenticated]);
+
+  // Separate effect for socket event listeners
+  useEffect(() => {
+    if (!token || !user || !isAuthenticated) return;
 
     // Socket event listeners
     socketService.onNewMessage((message) => {
@@ -343,25 +390,32 @@ export default function Chat() {
     });
 
     return () => {
-      socketService.disconnect();
+      // Clean up socket listeners
+      socketService.off("newMessage");
+      socketService.off("messageDelivered");
+      socketService.off("messageRead");
+      socketService.off("reactionUpdated");
+      socketService.off("userOnline");
+      socketService.off("userOffline");
+      socketService.off("userTyping");
+      socketService.off("error");
+      socketService.off("avatarUpdated");
+      socketService.off("profileUpdated");
+      socketService.off("conversationAdded");
+      socketService.off("conversationUpdated");
+      socketService.off("conversationClearedUnread");
     };
-  }, [
-    token,
-    user,
-    updateUser,
-    loadConversations,
-    addMessage,
-    setUserOnline,
-    setUserOffline,
-    setUserTyping,
-    removeUserTyping,
-    updateMessage,
-    updateUserInMessages,
-    setLoadingConversations,
-  ]);
+  }, [token, user, isAuthenticated]);
 
   return (
     <div className="h-screen bg-background flex">
+      {/* Offline indicator */}
+      {!isOnline && (
+        <div className="fixed top-0 left-0 right-0 z-50 bg-red-500 text-white text-center py-2 text-sm">
+          You're offline. Some features may not work properly.
+        </div>
+      )}
+
       {/* Show sidebar when: Desktop (always) OR Mobile (no conversation selected) */}
       {(!isMobile || (isMobile && !conversationId)) && <Sidebar />}
 

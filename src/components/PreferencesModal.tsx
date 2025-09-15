@@ -1,4 +1,4 @@
-import { Modal, Toggle, Button } from "./ui";
+import { Modal, Toggle } from "./ui";
 import { usePreferencesStore } from "../stores/preferencesStore";
 
 interface PreferencesModalProps {
@@ -22,9 +22,9 @@ export default function PreferencesModal({
       isOpen={isOpen}
       onClose={onClose}
       title="Sound & Vibration"
-      size="md"
+      size="sm"
     >
-      <div className="space-y-4">
+      <div className="md:space-y-4 space-y-3">
         <div className="flex items-center justify-between">
           <span className="text-sm">Sound effects</span>
           <Toggle checked={soundEnabled} onChange={setSoundEnabled} />
@@ -34,12 +34,6 @@ export default function PreferencesModal({
           <span className="text-sm">Vibration / Haptics</span>
           <Toggle checked={vibrationEnabled} onChange={setVibrationEnabled} />
         </div>
-      </div>
-
-      <div className="mt-6 flex justify-end">
-        <Button variant="secondary" onClick={onClose}>
-          Close
-        </Button>
       </div>
     </Modal>
   );

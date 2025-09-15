@@ -16,6 +16,7 @@ import {
   togglePinConversation,
   exportConversation,
   renameGroup,
+  getConversationMedia,
 } from "../controllers/chatController.js";
 
 const router = express.Router();
@@ -47,6 +48,7 @@ router.use(authenticate);
 router.get("/conversations", getConversations);
 router.post("/conversations", createConversation);
 router.get("/conversations/:conversationId/messages", getMessages);
+router.get("/conversations/:conversationId/media", getConversationMedia);
 router.delete("/conversations/:conversationId/messages", clearMessages);
 router.delete("/conversations/:conversationId", deleteConversation);
 router.post("/conversations/:conversationId/pin", togglePinConversation);

@@ -129,27 +129,27 @@ export default function ChatHeader({
   const { name, subtitle, avatar, isOnline, isAI } = getConversationInfo();
 
   return (
-    <div className="bg-background border-b border-border p-4">
+    <div className="bg-background border-b border-border md:p-4 p-3">
       <div className="flex items-center justify-between flex-wrap gap-2">
         {/* Left side - Back button and User info */}
-        <div className="flex items-center space-x-2 min-w-0 flex-1">
+        <div className="flex items-center md:space-x-2 space-x-1.5 min-w-0 flex-1">
           {/* Back button for mobile */}
           {showBackButton && (
             <Button
               variant="ghost"
-              size="sm"
+              size="icon"
               onClick={() => navigate("/chat")}
               className="p-2 md:hidden"
               title="Back to conversations"
             >
-              <ArrowLeft className="w-5 h-5" />
+              <ArrowLeft className="md:w-5 md:h-5 w-4 h-4" />
             </Button>
           )}
 
           <Avatar
             src={avatar}
             name={name}
-            size="lg"
+            size="md"
             isAI={isAI}
             isOnline={isOnline}
           />
@@ -185,20 +185,6 @@ export default function ChatHeader({
         </div>
       </div>
 
-      {/* Search bar */}
-      {/* {showSearch && (
-        <div className="mt-3 md:mt-4">
-          <div className="relative">
-            <Search className="absolute left-3 md:left-4 top-1/2 transform -translate-y-1/2 w-4 h-4 md:w-5 md:h-5 text-muted-foreground" />
-            <input
-              type="text"
-              placeholder="Search in this conversation..."
-              className="w-full pl-10 md:pl-12 pr-4 py-2 md:py-3 text-sm md:text-base bg-muted rounded-lg md:rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:bg-background border border-transparent focus:border-primary"
-              autoFocus
-            />
-          </div>
-        </div>
-      )} */}
       {showDeleteConfirm && (
         <ConfirmModal
           isOpen={showDeleteConfirm}

@@ -9,7 +9,11 @@ import { useAuthStore } from "./stores/authStore";
 import { useThemeStore } from "./stores/themeStore";
 import { useEffect, lazy, Suspense, memo } from "react";
 import { ErrorBoundary } from "./components/ErrorBoundary";
-import { performanceMonitor, preloadCriticalResources } from "./lib/performance";
+import { NetworkErrorBoundary } from "./components/NetworkErrorBoundary";
+import {
+  performanceMonitor,
+  preloadCriticalResources,
+} from "./lib/performance";
 import "./index.css";
 
 // Lazy load pages with prefetch hints
@@ -35,7 +39,7 @@ const LoadingComponent = memo(() => (
     </div>
   </div>
 ));
-LoadingComponent.displayName = 'LoadingComponent';
+LoadingComponent.displayName = "LoadingComponent";
 
 function App() {
   const { isAuthenticated } = useAuthStore();
@@ -44,7 +48,7 @@ function App() {
   useEffect(() => {
     const initializeApp = async () => {
       // Record app start time
-      performanceMonitor.recordMetric('app-start', {
+      performanceMonitor.recordMetric("app-start", {
         loadTime: performance.now(),
         renderTime: 0,
       });
@@ -85,49 +89,59 @@ function App() {
 
   return (
     <ErrorBoundary>
-      <div className="min-h-screen">
-        <Router>
-          <Suspense fallback={<LoadingComponent />}>
-            <Routes>
-              <Route
-                path="/login"
-                element={!isAuthenticated ? <Login /> : <Navigate to="/chat" />}
-              />
-              <Route
-                path="/register"
-                element={
-                  !isAuthenticated ? <Register /> : <Navigate to="/chat" />
-                }
-              />
-              <Route
-                path="/verify-otp"
-                element={
-                  !isAuthenticated ? <VerifyOTP /> : <Navigate to="/chat" />
-                }
-              />
-              <Route
-                path="/chat"
-                element={isAuthenticated ? <Chat /> : <Navigate to="/login" />}
-              />
-              <Route
-                path="/chat/:conversationId"
-                element={isAuthenticated ? <Chat /> : <Navigate to="/login" />}
-              />
-              <Route
-                path="/"
-                element={<Navigate to={isAuthenticated ? "/chat" : "/login"} />}
-              />
-            </Routes>
-          </Suspense>
-        </Router>
-        <Toaster
-          position="top-right"
-          toastOptions={{
-            duration: 4000,
-            className: isDark ? "dark-toast" : "",
-          }}
-        />
-      </div>
+      <NetworkErrorBoundary>
+        <div className="min-h-screen">
+          <Router>
+            <Suspense fallback={<LoadingComponent />}>
+              <Routes>
+                <Route
+                  path="/login"
+                  element={
+                    !isAuthenticated ? <Login /> : <Navigate to="/chat" />
+                  }
+                />
+                <Route
+                  path="/register"
+                  element={
+                    !isAuthenticated ? <Register /> : <Navigate to="/chat" />
+                  }
+                />
+                <Route
+                  path="/verify-otp"
+                  element={
+                    !isAuthenticated ? <VerifyOTP /> : <Navigate to="/chat" />
+                  }
+                />
+                <Route
+                  path="/chat"
+                  element={
+                    isAuthenticated ? <Chat /> : <Navigate to="/login" />
+                  }
+                />
+                <Route
+                  path="/chat/:conversationId"
+                  element={
+                    isAuthenticated ? <Chat /> : <Navigate to="/login" />
+                  }
+                />
+                <Route
+                  path="/"
+                  element={
+                    <Navigate to={isAuthenticated ? "/chat" : "/login"} />
+                  }
+                />
+              </Routes>
+            </Suspense>
+          </Router>
+          <Toaster
+            position="top-right"
+            toastOptions={{
+              duration: 4000,
+              className: isDark ? "dark-toast" : "",
+            }}
+          />
+        </div>
+      </NetworkErrorBoundary>
     </ErrorBoundary>
   );
 }

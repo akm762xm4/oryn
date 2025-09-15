@@ -119,9 +119,9 @@ export default function UserProfile({ isOpen, onClose }: UserProfileProps) {
     <Modal isOpen={isOpen} onClose={onClose} title="Profile Settings" size="md">
       <div className="p-0">
         {/* Avatar section */}
-        <div className="flex flex-col items-center mb-6">
+        <div className="flex flex-col items-center md:mb-6 mb-3">
           <div className="relative">
-            <div className="w-28 h-28 bg-primary rounded-full flex items-center justify-center overflow-hidden">
+            <div className="md:w-28 md:h-28 w-24 bg-primary rounded-full flex items-center justify-center overflow-hidden">
               {user.avatar ? (
                 <img
                   src={user.avatar}
@@ -129,7 +129,7 @@ export default function UserProfile({ isOpen, onClose }: UserProfileProps) {
                   className="w-full h-full object-cover object-center"
                 />
               ) : (
-                <User className="w-12 h-12 text-white" />
+                <User className="md:w-12 md:h-12 w-10 h-10 text-white" />
               )}
             </div>
 
@@ -139,9 +139,9 @@ export default function UserProfile({ isOpen, onClose }: UserProfileProps) {
               }`}
             >
               {isUploadingAvatar ? (
-                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                <div className="md:w-4 md:h-4 w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
               ) : (
-                <Camera className="w-4 h-4" />
+                <Camera className="md:w-4 md:h-4 w-3 h-3 " />
               )}
               <input
                 title="image-upload"
@@ -155,14 +155,19 @@ export default function UserProfile({ isOpen, onClose }: UserProfileProps) {
             {/* No extra controls - upload button is floating on avatar */}
           </div>
 
-          <h3 className="text-lg font-semibold text-foreground mt-3">
+          <h3 className="md:text-lg text-base font-semibold text-foreground mt-2">
             {user.username}
           </h3>
-          <p className="text-sm text-muted-foreground">{user.email}</p>
+          <p className="md:text-sm text-xs  text-muted-foreground">
+            {user.email}
+          </p>
         </div>
 
         {/* Profile form */}
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <form
+          onSubmit={handleSubmit(onSubmit)}
+          className="md:space-y-4 space-y-3"
+        >
           <Input
             label="Username"
             type="text"
@@ -179,6 +184,7 @@ export default function UserProfile({ isOpen, onClose }: UserProfileProps) {
             })}
             disabled={!isEditing}
             error={errors.username?.message}
+            className="py-3 md:py-3.5 md:text-sm text-xs"
           />
 
           <Input
@@ -193,10 +199,11 @@ export default function UserProfile({ isOpen, onClose }: UserProfileProps) {
             })}
             disabled={!isEditing}
             error={errors.email?.message}
+            className="py-3 md:py-3.5 md:text-sm text-xs"
           />
 
           {/* Action buttons */}
-          <div className="flex space-x-3 pt-4">
+          <div className="flex md:space-x-3 space-x-2 md:pt-4 pt-2">
             {!isEditing ? (
               <Button type="button" onClick={handleEdit} className="flex-1">
                 Edit Profile
@@ -217,7 +224,7 @@ export default function UserProfile({ isOpen, onClose }: UserProfileProps) {
                   isLoading={isSaving}
                   disabled={!isDirty || isSaving}
                 >
-                  <Save className="w-4 h-4" />
+                  <Save className="md:w-4 md:h-4 w-3 h-3" />
                   <span>Save</span>
                 </Button>
               </>
@@ -226,13 +233,13 @@ export default function UserProfile({ isOpen, onClose }: UserProfileProps) {
         </form>
 
         {/* Account info */}
-        <div className="mt-6 pt-6 border-t border-border">
-          <div className="space-y-2 text-sm">
-            <div className="flex justify-between">
+        <div className="md:mt-6 mt-4 md:pt-6 pt-4 border-t border-border">
+          <div className="md:space-y-2 space-y-1 md:text-sm text-xs">
+            <div className="flex justify-between ">
               <span className="text-muted-foreground">Account Status:</span>
               <span
                 className={`font-medium ${
-                  user.isVerified ? "text-accent" : "text-destructive"
+                  user.isVerified ? "text-muted-foreground" : "text-destructive"
                 }`}
               >
                 {user.isVerified ? "Verified" : "Unverified"}

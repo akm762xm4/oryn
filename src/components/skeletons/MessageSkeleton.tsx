@@ -35,7 +35,7 @@ export default function MessageSkeleton({
 
 export function MessageListSkeleton() {
   return (
-    <div className="flex-1 overflow-y-auto p-4 space-y-4">
+    <div className="flex-1 overflow-y-auto md:p-4 p-2 md:space-y-4 space-y-2">
       {Array.from({ length: 10 }).map((_, index) => (
         <MessageSkeleton key={index} isOwn={index % 3 === 0} />
       ))}

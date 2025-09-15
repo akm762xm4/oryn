@@ -22,7 +22,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     ref
   ) => {
     const baseClasses =
-      "inline-flex items-center justify-center gap-2 rounded-lg font-medium transition-transform transform-gpu focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation select-none";
+      "inline-flex items-center justify-center md:gap-2 gap-1 rounded-lg font-medium transition-transform transform-gpu focus:outline-none focus:ring-1 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation select-none";
 
     const variantClasses: Record<
       NonNullable<ButtonProps["variant"]>,
@@ -40,9 +40,9 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     } as const;
 
     const sizeClasses: Record<NonNullable<ButtonProps["size"]>, string> = {
-      sm: "h-8 px-3 text-sm",
-      md: "h-10 px-4 text-sm",
-      lg: "h-12 px-6 text-base",
+      sm: "md:h-8 h-7 px-3 text-sm",
+      md: "md:h-10 h-9 px-4 md:text-sm text-xs",
+      lg: "md:h-12 h-11 px-6 md:text-base text-sm",
       icon: "h-8 w-8 p-0",
     };
 
@@ -54,14 +54,9 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         {...props}
       >
         {isLoading ? (
-          <>
-            <div
-              className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin"
-              aria-hidden
-            />
-            <span className="sr-only">Loading</span>
-            <span className="ml-2">Loading...</span>
-          </>
+          <div className="flex justify-center items-center py-8 text-muted-foreground">
+            <div className="w-5 h-5 border-2 border-accent border-t-transparent rounded-full animate-spin " />
+          </div>
         ) : (
           children
         )}

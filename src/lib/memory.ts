@@ -150,6 +150,35 @@ export function useMemoryCleanup(componentName: string) {
     memoryManager.cleanup(componentId);
   };
 
+  // Cleanup on page unload or network disconnection
+  if (typeof window !== "undefined") {
+    const handleBeforeUnload = () => {
+      cleanup();
+    };
+
+    const handleOffline = () => {
+      // Pause intervals and timeouts when offline to save resources
+      const intervals = Array.from(
+        memoryManager["intervalRefs"].entries()
+      ).filter(([key]) => key.startsWith(componentId));
+      const timeouts = Array.from(
+        memoryManager["timeoutRefs"].entries()
+      ).filter(([key]) => key.startsWith(componentId));
+
+      intervals.forEach(([, intervalRef]) => clearInterval(intervalRef));
+      timeouts.forEach(([, timeoutRef]) => clearTimeout(timeoutRef));
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    window.addEventListener("offline", handleOffline);
+
+    // Cleanup listeners
+    registerCleanup(() => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+      window.removeEventListener("offline", handleOffline);
+    });
+  }
+
   return {
     registerCleanup,
     registerInterval,

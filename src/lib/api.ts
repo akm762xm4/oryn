@@ -20,14 +20,43 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
+// Flag to prevent multiple redirects
+let isRedirecting = false;
+
 // Response interceptor for error handling
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
+    // Handle network errors
+    if (!error.response && error.code === "NETWORK_ERROR") {
+      // Don't redirect on network errors, just reject the promise
+      return Promise.reject({
+        ...error,
+        code: "NETWORK_ERROR",
+        message: "Network Error",
+      });
+    }
+
+    if (error.response?.status === 401 && !isRedirecting) {
+      isRedirecting = true;
+
+      // Clear auth data
       localStorage.removeItem("token");
       localStorage.removeItem("user");
-      window.location.href = "/login";
+      sessionStorage.removeItem("token");
+      sessionStorage.removeItem("user");
+
+      // Dispatch a custom event to notify components
+      window.dispatchEvent(
+        new CustomEvent("auth:logout", {
+          detail: { reason: "token_expired" },
+        })
+      );
+
+      // Redirect after a small delay to allow cleanup
+      setTimeout(() => {
+        window.location.href = "/login";
+      }, 100);
     }
     return Promise.reject(error);
   }

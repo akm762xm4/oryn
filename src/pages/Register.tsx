@@ -62,16 +62,20 @@ export default function Register() {
 
   return (
     <div className="auth-background flex items-center justify-center p-4 min-h-screen">
-      <div className="w-full max-w-md bg-background/90 backdrop-blur-sm rounded-2xl p-6 sm:p-8 shadow-2xl border border-white/10 mx-auto relative">
+      <div className="w-full max-w-md bg-background/90 backdrop-blur-sm rounded-2xl p-6 md:p-8 shadow-2xl border border-white/10 mx-auto relative">
         {/* Header */}
-        <div className="text-center mb-6 sm:mb-4">
+        <div className="text-center mb-4 md:mb-6">
           <div className="flex items-center justify-center mb-4">
-            <img src="/Oryn Full.png" alt="Oryn Logo" className="h-16 w-auto" />
+            <img
+              src="/Oryn Full.png"
+              alt="Oryn Logo"
+              className="md:h-16 h-13 w-auto"
+            />
           </div>
-          <h1 className="text-xl sm:text-2xl font-bold text-foreground">
+          <h1 className="text-lg md:text-2xl font-bold text-foreground">
             Join Oryn
           </h1>
-          <p className="text-sm sm:text-base text-muted-foreground mt-2">
+          <p className="text-sm md:text-base text-muted-foreground mt-2">
             Create your account today
           </p>
         </div>
@@ -90,7 +94,7 @@ export default function Register() {
         {/* Form */}
         <form
           onSubmit={handleSubmit(onSubmit)}
-          className="space-y-4 sm:space-y-6"
+          className="space-y-4 md:space-y-6"
         >
           <Input
             label="Username"
@@ -115,7 +119,7 @@ export default function Register() {
             placeholder="Choose a username"
             autoComplete="username"
             error={errors.username?.message}
-            className="py-3.5 sm:py-3 text-base sm:text-sm"
+            className="py-3 md:py-3.5 md:text-sm text-xs"
           />
 
           <Input
@@ -132,7 +136,7 @@ export default function Register() {
             placeholder="Enter your email"
             autoComplete="email"
             error={errors.email?.message}
-            className="py-3.5 sm:py-3 text-base sm:text-sm"
+            className="py-3 md:py-3.5 text-xs md:text-sm"
           />
 
           <Input
@@ -157,13 +161,13 @@ export default function Register() {
                 aria-label={showPassword ? "Hide password" : "Show password"}
               >
                 {showPassword ? (
-                  <EyeOff className="w-5 h-5" />
+                  <EyeOff className="md:w-4 w-3 md:h-4 h-3" />
                 ) : (
-                  <Eye className="w-5 h-5" />
+                  <Eye className="md:w-4 w-3 md:h-4 h-3" />
                 )}
               </button>
             }
-            className="py-3.5 sm:py-3 text-base sm:text-sm"
+            className="py-3 md:py-3.5 text-xs md:text-sm"
           />
 
           <Input
@@ -188,27 +192,27 @@ export default function Register() {
                 }
               >
                 {showConfirmPassword ? (
-                  <EyeOff className="w-5 h-5" />
+                  <EyeOff className="md:w-4 w-3 md:h-4 h-3" />
                 ) : (
-                  <Eye className="w-5 h-5" />
+                  <Eye className="md:w-4 w-3 md:h-4 h-3" />
                 )}
               </button>
             }
-            className="py-3.5 sm:py-3 text-base sm:text-sm"
+            className="py-3 md:py-3.5 text-xs md:text-sm"
           />
 
           <Button
             type="submit"
             isLoading={isLoading}
-            className="w-full py-3.5 sm:py-3 text-base sm:text-sm"
+            className="w-full py-3.5 md:py-3 text-base md:text-sm"
           >
             Create Account
           </Button>
         </form>
 
         {/* Footer */}
-        <div className="text-center mt-5 sm:mt-6">
-          <p className="text-sm sm:text-base text-muted-foreground">
+        <div className="text-center mt-4 md:mt-6">
+          <p className="text-sm md:text-base text-muted-foreground">
             Already have an account?{" "}
             <Link
               to="/login"

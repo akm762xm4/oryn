@@ -52,16 +52,20 @@ export default function Login() {
 
   return (
     <div className="auth-background flex items-center justify-center p-4 min-h-screen">
-      <div className="w-full max-w-md bg-background/90 backdrop-blur-sm rounded-2xl p-6 sm:p-8 shadow-2xl border border-white/10 mx-auto relative">
+      <div className="w-full max-w-md bg-background/90 backdrop-blur-sm rounded-2xl p-6 md:p-8 shadow-2xl border border-white/10 mx-auto relative">
         {/* Header */}
-        <div className="text-center mb-6 sm:mb-6">
+        <div className="text-center mb-4 md:mb-6">
           <div className="flex items-center justify-center mb-4">
-            <img src="/Oryn Full.png" alt="Oryn Logo" className="h-16 w-auto" />
+            <img
+              src="/Oryn Full.png"
+              alt="Oryn Logo"
+              className="md:h-16 h-13 w-auto"
+            />
           </div>
-          <h1 className="text-xl sm:text-2xl font-bold text-foreground">
+          <h1 className="text-lg md:text-2xl font-bold text-foreground">
             Welcome Back to Oryn
           </h1>
-          <p className="text-sm sm:text-base text-muted-foreground mt-2">
+          <p className="text-sm md:text-base text-muted-foreground mt-2">
             Sign in to your account
           </p>
         </div>
@@ -80,7 +84,7 @@ export default function Login() {
         {/* Form */}
         <form
           onSubmit={handleSubmit(onSubmit)}
-          className="space-y-5 sm:space-y-6"
+          className="space-y-4 md:space-y-6"
         >
           <Input
             label="Email"
@@ -92,11 +96,11 @@ export default function Login() {
                 message: "Invalid email address",
               },
             })}
-            leftIcon={<Mail className="w-4 h-4 " />}
+            leftIcon={<Mail className="md:w-4 w-3 md:h-4 h-3 " />}
             placeholder="Enter your email"
             autoComplete="email"
             error={errors.email?.message}
-            className="py-3.5 sm:py-3 text-base sm:text-sm"
+            className="py-3 md:py-3.5 md:text-sm text-xs"
           />
 
           <Input
@@ -112,7 +116,7 @@ export default function Login() {
             placeholder="Enter your password"
             autoComplete="current-password"
             error={errors.password?.message}
-            leftIcon={<Lock className="w-4 h-4 " />}
+            leftIcon={<Lock className="md:w-4 w-3 md:h-4 h-3" />}
             rightIcon={
               <button
                 type="button"
@@ -121,19 +125,19 @@ export default function Login() {
                 aria-label={showPassword ? "Hide password" : "Show password"}
               >
                 {showPassword ? (
-                  <EyeOff className="w-5 h-5" />
+                  <EyeOff className="md:w-4 w-3 md:h-4 h-3" />
                 ) : (
-                  <Eye className="w-5 h-5" />
+                  <Eye className="md:w-4 w-3 md:h-4 h-3" />
                 )}
               </button>
             }
-            className="py-3.5 sm:py-3 text-base sm:text-sm"
+            className="py-3 md:py-3.5 md:text-sm text-xs"
           />
 
-          <label className="flex items-center gap-2 text-sm">
+          <label className="flex items-center gap-2 md:text-sm *:text-xs">
             <input
               type="checkbox"
-              className="h-4 w-4"
+              className="sm-h-4 h-3 sm-w-4 w-3"
               defaultChecked
               {...register("remember")}
             />
@@ -143,15 +147,15 @@ export default function Login() {
           <Button
             type="submit"
             isLoading={isLoading}
-            className="w-full py-3.5 sm:py-3 text-base sm:text-sm"
+            className="w-full py-3 md:py-3.5 text-xs md:text-sm"
           >
             Sign In
           </Button>
         </form>
 
         {/* Footer */}
-        <div className="text-center mt-5 sm:mt-6">
-          <p className="text-sm sm:text-base text-muted-foreground">
+        <div className="text-center mt-4 md:mt-6">
+          <p className="text-sm md:text-base text-muted-foreground">
             Don't have an account?{" "}
             <Link
               to="/register"

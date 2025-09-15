@@ -106,53 +106,47 @@ export default function VerifyOTP() {
 
   return (
     <div className="auth-background flex items-center justify-center p-4 min-h-screen">
-      <div className="w-full max-w-md bg-background/90 backdrop-blur-sm rounded-2xl p-6 sm:p-8 shadow-2xl border border-white/10 mx-auto">
+      <div className="w-full max-w-md bg-background/90 backdrop-blur-sm rounded-2xl p-6 md:p-8 shadow-2xl border border-white/10 mx-auto">
         {/* Header */}
-        <div className="text-center mb-6 sm:mb-8">
+        <div className="text-center mb-4 md:mb-6">
           <div className="flex items-center justify-center mb-4">
-            <div className="bg-primary p-3 rounded-full">
-              <span className="text-white font-bold text-2xl sm:text-3xl">
-                O
-              </span>
-            </div>
+            <img
+              src="/Oryn Full.png"
+              alt="Oryn Logo"
+              className="sm-h-16 h-13 w-auto"
+            />
           </div>
-          <h1 className="text-xl sm:text-2xl font-bold text-foreground">
-            Verify Your Email
+          <h1 className="text-lg md:text-2xl font-bold text-foreground">
+            Join Oryn
           </h1>
-          <p className="text-sm sm:text-base text-muted-foreground mt-2">
-            We've sent a verification code to
-          </p>
-          <p className="text-sm sm:text-base text-foreground font-medium break-all">
-            {email}
+          <p className="text-sm md:text-base text-muted-foreground mt-2">
+            Create your account today
           </p>
         </div>
-
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={toggleTheme}
+          className="absolute top-4 right-4 p-2 bg-muted hover:bg-muted/80"
+          aria-label="Toggle theme"
+        >
+          {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+        </Button>
         {/* Navigation */}
-        <div className="flex justify-between items-center mb-4 sm:mb-6">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => navigate("/register")}
-            className="p-2 bg-muted hover:bg-muted/80"
-            aria-label="Go back to register"
-          >
-            <ArrowLeft className="w-5 h-5" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={toggleTheme}
-            className="p-2 bg-muted hover:bg-muted/80"
-            aria-label="Toggle theme"
-          >
-            {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-          </Button>
-        </div>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => navigate("/register")}
+          className="absolute top-4 left-4 p-2 bg-muted hover:bg-muted/80"
+          aria-label="Go back to register"
+        >
+          <ArrowLeft className="w-5 h-5" />
+        </Button>
 
         {/* Form */}
         <form
           onSubmit={handleSubmit(onSubmit)}
-          className="space-y-5 sm:space-y-6"
+          className="space-y-4 md:space-y-6"
         >
           <Input
             label="Verification Code"
@@ -167,22 +161,21 @@ export default function VerifyOTP() {
             placeholder="000000"
             maxLength={6}
             error={errors.otp?.message}
-            className="text-center text-xl sm:text-lg tracking-widest py-4 sm:py-3"
+            className="text-center text-xl md:text-lg tracking-widest py-3 md:py-4"
             containerClassName="input-numeric"
           />
 
           <Button
             type="submit"
             isLoading={isLoading}
-            className="w-full py-3.5 sm:py-3 text-base sm:text-sm"
+            className="w-full py-3 md:py-3.5 text-xs md:text-sm"
           >
             Verify Email
           </Button>
         </form>
-
         {/* Resend OTP */}
-        <div className="text-center mt-5 sm:mt-6">
-          <p className="text-sm sm:text-base text-muted-foreground mb-2">
+        <div className="text-center mt-4 md:mt-6">
+          <p className="text-sm md:text-base text-muted-foreground mb-2">
             Didn't receive the code?
           </p>
           <Button
@@ -190,7 +183,7 @@ export default function VerifyOTP() {
             onClick={handleResendOTP}
             disabled={countdown > 0 || isResending}
             isLoading={isResending}
-            className="text-primary hover:underline font-medium text-sm sm:text-base p-0 h-auto"
+            className="text-primary hover:underline font-medium text-sm md:text-base p-0 h-auto"
           >
             {countdown > 0 ? `Resend in ${countdown}s` : "Resend Code"}
           </Button>

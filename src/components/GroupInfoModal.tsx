@@ -15,14 +15,23 @@ interface RenameForm {
   groupName: string;
 }
 
-export default function GroupInfoModal({ isOpen, onClose, conversation }: GroupInfoModalProps) {
+export default function GroupInfoModal({
+  isOpen,
+  onClose,
+  conversation,
+}: GroupInfoModalProps) {
   const [isRenaming, setIsRenaming] = useState(false);
-  
-  const { register, handleSubmit, formState: { errors }, reset } = useForm<RenameForm>();
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    reset,
+  } = useForm<RenameForm>();
 
   const onSubmit = async (data: RenameForm) => {
     if (!data.groupName.trim()) return;
-    
+
     try {
       setIsRenaming(true);
       await api.put(`/chat/conversations/${conversation._id}/rename`, {
@@ -56,8 +65,9 @@ export default function GroupInfoModal({ isOpen, onClose, conversation }: GroupI
               minLength: { value: 1, message: "Group name cannot be empty" },
             })}
             error={errors.groupName?.message}
+            className="py-3 md:py-3.5 md:text-sm text-xs"
           />
-          
+
           <div className="flex justify-end gap-2">
             <Button type="button" variant="secondary" onClick={handleClose}>
               Cancel
@@ -70,7 +80,9 @@ export default function GroupInfoModal({ isOpen, onClose, conversation }: GroupI
 
         {/* Members Section */}
         <div>
-          <h3 className="text-sm font-medium mb-3">Members ({conversation.participants.length})</h3>
+          <h3 className="text-sm font-medium mb-3">
+            Members ({conversation.participants.length})
+          </h3>
           <div className="space-y-2 max-h-64 overflow-y-auto">
             {conversation.participants.map((participant) => (
               <div
@@ -84,7 +96,9 @@ export default function GroupInfoModal({ isOpen, onClose, conversation }: GroupI
                 />
                 <div className="flex-1 text-sm">
                   <div className="font-medium">{participant.username}</div>
-                  <div className="text-muted-foreground text-xs">{participant.email}</div>
+                  <div className="text-muted-foreground text-xs">
+                    {participant.email}
+                  </div>
                 </div>
               </div>
             ))}

@@ -4,7 +4,7 @@ import type { AuthState, User } from "../types";
 
 export const useAuthStore = create<AuthState>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       user: null,
       token: null,
       isAuthenticated: false,
@@ -51,3 +51,11 @@ export const useAuthStore = create<AuthState>()(
     }
   )
 );
+
+// Listen for auth logout events from API interceptor
+if (typeof window !== "undefined") {
+  window.addEventListener("auth:logout", () => {
+    const { logout } = useAuthStore.getState();
+    logout();
+  });
+}

@@ -764,3 +764,99 @@ export const renameGroup = async (req, res) => {
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };
+
+// Get all media files for a conversation
+export const getConversationMedia = async (req, res) => {
+  try {
+    const { conversationId } = req.params;
+    const { page = 1, limit = 50 } = req.query;
+
+    // Verify conversation exists and user is a participant
+    const conversation = await Conversation.findById(conversationId);
+    if (!conversation || !conversation.participants.includes(req.user._id)) {
+      return res.status(404).json({ message: "Conversation not found" });
+    }
+
+    // Parse pagination parameters
+    const parsedLimit = Math.min(Math.max(parseInt(limit), 1), 100);
+    const parsedPage = Math.max(parseInt(page), 1);
+
+    // Find all messages with media (images) in the conversation
+    const mediaMessages = await Message.find({
+      conversation: conversationId,
+      messageType: "image",
+      imageUrl: { $exists: true, $ne: null },
+    })
+      .select("_id content imageUrl messageType createdAt sender")
+      .sort({ createdAt: -1 })
+      .limit(parsedLimit)
+      .skip((parsedPage - 1) * parsedLimit)
+      .lean();
+
+    // Get unique sender IDs for batch population
+    const senderIds = [
+      ...new Set(mediaMessages.map((msg) => msg.sender.toString())),
+    ].filter((id) => id !== AI_USER_ID.toString());
+
+    // Batch fetch users for better performance
+    const users = await User.find({ _id: { $in: senderIds } })
+      .select("username avatar")
+      .lean();
+
+    // Create a map for quick user lookup
+    const userMap = users.reduce((map, user) => {
+      map[user._id.toString()] = user;
+      return map;
+    }, {});
+
+    // Populate messages with sender data
+    const populatedMediaMessages = mediaMessages.map((message) => {
+      if (message.sender.toString() === AI_USER_ID.toString()) {
+        // Handle AI messages with virtual AI user
+        return {
+          ...message,
+          sender: {
+            _id: "ai-assistant",
+            username: "AI Assistant",
+            avatar: "",
+          },
+        };
+      } else {
+        // Handle regular user messages
+        const sender = userMap[message.sender.toString()];
+        return {
+          ...message,
+          sender: sender || {
+            _id: message.sender,
+            username: "Unknown",
+            avatar: "",
+          },
+        };
+      }
+    });
+
+    // Get total count for pagination
+    const totalMedia = await Message.countDocuments({
+      conversation: conversationId,
+      messageType: "image",
+      imageUrl: { $exists: true, $ne: null },
+    });
+
+    // Add cache headers for better performance (cache for 2 minutes)
+    res.set("Cache-Control", "private, max-age=120");
+
+    res.json({
+      media: populatedMediaMessages,
+      pagination: {
+        page: parsedPage,
+        limit: parsedLimit,
+        total: totalMedia,
+        pages: Math.ceil(totalMedia / parsedLimit),
+        hasNext: parsedPage < Math.ceil(totalMedia / parsedLimit),
+        hasPrev: parsedPage > 1,
+      },
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};

@@ -14,7 +14,10 @@ interface ChangePasswordForm {
   confirmPassword: string;
 }
 
-export default function ChangePasswordModal({ isOpen, onClose }: ChangePasswordModalProps) {
+export default function ChangePasswordModal({
+  isOpen,
+  onClose,
+}: ChangePasswordModalProps) {
   const {
     register,
     handleSubmit,
@@ -45,8 +48,16 @@ export default function ChangePasswordModal({ isOpen, onClose }: ChangePasswordM
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={handleClose} title="Change Password" size="md">
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+    <Modal
+      isOpen={isOpen}
+      onClose={handleClose}
+      title="Change Password"
+      size="md"
+    >
+      <form
+        onSubmit={handleSubmit(onSubmit)}
+        className="md:space-y-4 space-y-3"
+      >
         <Input
           label="Current password"
           type="password"
@@ -54,6 +65,7 @@ export default function ChangePasswordModal({ isOpen, onClose }: ChangePasswordM
             required: "Current password is required",
           })}
           error={errors.currentPassword?.message}
+          className="md:py-3.5 py-3 md:text-sm text-xs"
         />
 
         <Input
@@ -67,6 +79,7 @@ export default function ChangePasswordModal({ isOpen, onClose }: ChangePasswordM
             },
           })}
           error={errors.newPassword?.message}
+          className="md:py-3.5 py-3 md:text-sm text-xs"
         />
 
         <Input
@@ -78,9 +91,10 @@ export default function ChangePasswordModal({ isOpen, onClose }: ChangePasswordM
               value === newPassword || "Passwords do not match",
           })}
           error={errors.confirmPassword?.message}
+          className="md:py-3.5 py-3 md:text-sm text-xs"
         />
 
-        <div className="flex justify-end gap-2 pt-2">
+        <div className="flex justify-end gap-2 md:pt-2 pt-1">
           <Button type="button" variant="secondary" onClick={handleClose}>
             Cancel
           </Button>

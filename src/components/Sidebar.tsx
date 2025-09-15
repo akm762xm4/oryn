@@ -159,10 +159,10 @@ export default function Sidebar() {
             searchQuery ? (
               <Button
                 type="button"
-                size="sm"
+                size="icon"
                 variant="ghost"
                 onClick={clearSearch}
-                className="absolute right-4 md:right-3 top-1/2 transform -translate-y-1/2 p-1 md:p-0.5 rounded-full hover:bg-muted-foreground/20 transition-colors touch-manipulation"
+                className="absolute top-1/2 right-0 transform -translate-y-1/2 p-1 md:p-0.5 rounded-full hover:bg-muted-foreground/20 transition-colors touch-manipulation"
                 title="Clear search"
               >
                 <X className="w-4 h-4 md:w-3 md:h-3 text-muted-foreground" />
@@ -172,7 +172,7 @@ export default function Sidebar() {
           placeholder="Search conversations..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="touch-manipulation"
+          className="touch-manipulation py-3 md:py-3.5 md:text-sm text-xs"
         />
       </div>
 
