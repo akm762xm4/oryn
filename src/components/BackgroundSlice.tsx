@@ -62,10 +62,10 @@ export default function BackgroundSlice({
   // Get the color for the slice based on background type
   const getSliceColor = () => {
     if (background.id === "default") {
-      return "#f3f4f6"; // gray-100
+      return "hsl(var(--background))";
     }
     if (background.isImage) {
-      return "#8b5cf6"; // purple-500 for images
+      return "hsl(var(--accent))";
     }
     if (background.isTheme) {
       // Extract color from gradient for themes
@@ -74,9 +74,9 @@ export default function BackgroundSlice({
       if (background.preview.includes("#2e3192")) return "#2e3192";
       if (background.preview.includes("#fbc2eb")) return "#fbc2eb";
       if (background.preview.includes("#0f172a")) return "#0f172a";
-      return "#8b5cf6";
+      return "hsl(var(--primary))";
     }
-    return "#3b82f6"; // blue-500 default
+    return "hsl(var(--primary))";
   };
 
   const sliceColor = getSliceColor();
@@ -90,18 +90,18 @@ export default function BackgroundSlice({
       <motion.path
         d={pathData}
         fill={sliceColor}
-        stroke={selected ? "#ffffff" : "transparent"}
+        stroke={selected ? "hsl(var(--primary))" : "transparent"}
         strokeWidth={selected ? 3 : 0}
         strokeLinejoin="round"
         className="cursor-pointer transition-all duration-200"
         onClick={onClick}
         whileHover={{
-          filter: "brightness(1.1) drop-shadow(0 0 8px rgba(255,255,255,0.3))",
+          filter: "brightness(1.1) drop-shadow(0 0 8px hsl(var(--primary) / 0.3))",
         }}
         animate={{
           scale: selected ? 1.02 : 1,
           filter: selected
-            ? "brightness(1.1) drop-shadow(0 0 6px rgba(255,255,255,0.3))"
+            ? "brightness(1.1) drop-shadow(0 0 6px hsl(var(--primary) / 0.3))"
             : "brightness(1)",
         }}
         transition={{ type: "spring", stiffness: 300, damping: 20 }}

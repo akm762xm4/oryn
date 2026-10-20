@@ -25,20 +25,14 @@ const ConversationList = memo(function ConversationList({
 
   const handleConversationClick = (conversation: Conversation) => {
     const isMobile = window.innerWidth < 768;
-
     if (isMobile) {
-      // On mobile, navigate to the conversation route
-
       setActiveConversation(conversation);
       navigate(`/chat/${conversation._id}`);
     } else {
-      // On desktop, just set active conversation if it's not already active
       if (activeConversation?._id !== conversation._id) {
         setActiveConversation(conversation);
       }
     }
-
-    // Clear unread on open
     clearUnread(conversation._id);
   };
 
@@ -53,23 +47,13 @@ const ConversationList = memo(function ConversationList({
         };
       }
 
-      const otherUser = conversation.participants.find(
-        (p) => p._id !== user?._id
-      );
+      const otherUser = conversation.participants.find((p) => p._id !== user?._id);
 
       if (!otherUser) {
-        return {
-          name: "AI Assistant",
-          // avatar: "",
-          // isOnline: false,
-          isAI: true,
-        };
+        return { name: "AI Assistant", avatar: "", isOnline: false, isAI: true };
       }
 
-      // Check if it's AI conversation
-      const isAI =
-        otherUser._id === "ai-assistant" ||
-        otherUser.username === "AI Assistant";
+      const isAI = otherUser._id === "ai-assistant" || otherUser.username === "AI Assistant";
 
       return {
         name: otherUser.username,
@@ -83,18 +67,23 @@ const ConversationList = memo(function ConversationList({
 
   const formatLastMessage = (conversation: Conversation) => {
     if (!conversation.lastMessage) return "No messages yet";
-
     const { content, messageType, isAI } = conversation.lastMessage;
-
     if (messageType === "image") return "📷 Photo";
-    if (messageType === "ai" || isAI) return `🤖 ${content}`;
-
-    return content.length > 50 ? `${content.substring(0, 50)}...` : content;
+    if (messageType === "ai" || isAI) return `AI: ${content}`;
+    return content.length > 45 ? `${content.substring(0, 45)}…` : content;
   };
 
   const formatTime = (date: Date) => {
     try {
-      return formatDistanceToNow(new Date(date), { addSuffix: true });
+      return formatDistanceToNow(new Date(date), { addSuffix: false })
+        .replace("about ", "")
+        .replace(" minutes", "m")
+        .replace(" minute", "m")
+        .replace(" hours", "h")
+        .replace(" hour", "h")
+        .replace(" days", "d")
+        .replace(" day", "d")
+        .replace("less than a m", "<1m");
     } catch {
       return "";
     }
@@ -102,141 +91,138 @@ const ConversationList = memo(function ConversationList({
 
   if (conversations.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center p-8 md:p-8 px-6 text-center">
-        <div className="md:w-20 md:h-20 w-16 h-16 bg-muted rounded-full flex items-center justify-center mb-6 md:mb-4">
-          <Users className="w-10 h-10 md:w-8 md:h-8 text-muted-foreground" />
+      <div className="flex flex-col items-center justify-center py-12 px-6 text-center">
+        <div className="w-12 h-12 bg-muted rounded-full flex items-center justify-center mb-3">
+          <Users className="w-6 h-6 text-muted-foreground" />
         </div>
-        <h3 className="text-xl md:text-lg font-semibold md:font-medium text-foreground mb-3 md:mb-2">
-          No conversations yet
-        </h3>
-        <p className="text-muted-foreground text-base md:text-sm leading-relaxed">
-          Start a new chat to begin messaging
-        </p>
+        <p className="text-sm font-medium text-foreground mb-1">No conversations yet</p>
+        <p className="text-xs text-muted-foreground">Start a new chat to begin messaging</p>
       </div>
     );
   }
 
-  // Sort: pinned first by pinnedAt desc, then by updatedAt desc
   const sortedConversations = [...conversations].sort((a, b) => {
     const aPinned = a.pinnedAt ? 1 : 0;
     const bPinned = b.pinnedAt ? 1 : 0;
     if (aPinned !== bPinned) return bPinned - aPinned;
-    const aTime = (
-      a.pinnedAt ? new Date(a.pinnedAt) : new Date(a.updatedAt)
-    ).getTime();
-    const bTime = (
-      b.pinnedAt ? new Date(b.pinnedAt) : new Date(b.updatedAt)
-    ).getTime();
+    const aTime = (a.pinnedAt ? new Date(a.pinnedAt) : new Date(a.updatedAt)).getTime();
+    const bTime = (b.pinnedAt ? new Date(b.pinnedAt) : new Date(b.updatedAt)).getTime();
     return bTime - aTime;
   });
 
   return (
-    <div className="space-y-2 md:space-y-1 p-4 md:p-2">
+    <div className="px-2 py-1">
       {sortedConversations.map((conversation) => {
-        const { name, avatar, isOnline, isAI } =
-          getConversationInfo(conversation);
+        const { name, avatar, isOnline, isAI } = getConversationInfo(conversation);
         const isActive = activeConversation?._id === conversation._id;
+        const unread = unreadCounts[conversation._id] || 0;
 
         return (
           <button
             key={conversation._id}
             type="button"
             onClick={() => handleConversationClick(conversation)}
-            className={`z-0 relative w-full md:p-4 p-2.5 rounded-xl md:rounded-lg text-left transition-colors touch-manipulation ${
+            className={[
+              "relative w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-all duration-150 touch-manipulation mb-0.5",
               isActive
-                ? "bg-primary text-white shadow-md"
-                : "hover:bg-muted active:bg-muted/80"
-            } ${conversation.pinnedAt ? "border" : ""}`}
+                ? "bg-primary shadow-sm"
+                : "hover:bg-muted/70 active:bg-muted",
+              conversation.pinnedAt ? "border border-border/60" : "",
+            ].join(" ")}
           >
-            <Pin
-              fill="currentColor"
-              className={`z-10 rotate-30 absolute -top-1 -right-1 md:w-5 md:h-5 w-4 h-4 text-yellow-500  ${
-                conversation.pinnedAt ? "opacity-100" : "opacity-0"
-              }`}
-            />
-            <div className="flex items-center space-x-2.5 md:space-x-4">
-              {/* Avatar */}
-              <div className="relative">
-                <div
-                  className={`md:w-14 md:h-14 w-12 h-12 rounded-full flex items-center justify-center border ${
-                    isAI
-                      ? "bg-gradient-to-br from-purple-500 to-blue-600"
-                      : avatar
-                      ? "bg-cover bg-center"
-                      : "bg-primary"
-                  }`}
+            {/* Pin badge */}
+            {conversation.pinnedAt && (
+              <Pin
+                fill="currentColor"
+                className={`absolute top-1.5 right-2 w-3 h-3 ${
+                  isActive ? "text-primary-foreground/60" : "text-primary/60"
+                }`}
+              />
+            )}
+
+            {/* Avatar */}
+            <div className="relative flex-shrink-0">
+              <div
+                className={[
+                  "w-10 h-10 rounded-full flex items-center justify-center overflow-hidden text-sm font-semibold",
+                  isAI
+                    ? "bg-gradient-to-br from-violet-500 to-amber-400"
+                    : avatar
+                    ? ""
+                    : isActive
+                    ? "bg-primary-foreground/20 text-primary-foreground"
+                    : "bg-primary/15 text-primary",
+                ].join(" ")}
+              >
+                {isAI ? (
+                  <Bot className="w-5 h-5 text-white" />
+                ) : avatar ? (
+                  <img src={avatar} alt={name} className="w-full h-full rounded-full object-cover" />
+                ) : (
+                  <span>{name.charAt(0).toUpperCase()}</span>
+                )}
+              </div>
+              {/* Online dot */}
+              {isOnline && !isAI && (
+                <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-green-500 border-2 border-background rounded-full" />
+              )}
+              {/* AI pulse */}
+              {isAI && (
+                <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-primary border-2 border-background rounded-full animate-pulse" />
+              )}
+            </div>
+
+            {/* Text content */}
+            <div className="flex-1 min-w-0">
+              {/* Row 1: name + time */}
+              <div className="flex items-center justify-between gap-2 mb-0.5">
+                <span
+                  className={[
+                    "text-sm font-semibold truncate leading-tight",
+                    isActive ? "text-primary-foreground" : "text-foreground",
+                  ].join(" ")}
                 >
-                  {isAI ? (
-                    <Bot className="md:w-7 md:h-7 w-5.5 h-5.5 text-white" />
-                  ) : avatar ? (
-                    <img
-                      src={avatar}
-                      alt={name}
-                      className="w-full h-full rounded-full object-cover"
-                    />
-                  ) : (
-                    <span className="text-white font-medium md:text-xl text-lg">
-                      {name.charAt(0).toUpperCase()}
+                  {name}
+                  {conversation.isGroup && (
+                    <span className="ml-1 text-xs font-normal opacity-60">
+                      ({conversation.participants.length})
                     </span>
                   )}
-                </div>
-
-                {/* Online indicator */}
-                {isOnline && !isAI && (
-                  <div className="absolute -bottom-1 -right-1 md:w-5 md:h-5 w-4 h-4 bg-green-500 border-2 border-background rounded-full"></div>
-                )}
-
-                {/* AI indicator */}
-                {isAI && (
-                  <div className="absolute -bottom-1 -right-1 md:w-5 md:h-5 w-4 h-4 bg-gradient-to-br from-purple-500 to-blue-600 border-2 border-background rounded-full flex items-center justify-center">
-                    <div className="absolute bottom-0.5 right-0.5 w-2 h-2  bg-white rounded-full animate-pulse"></div>
-                  </div>
+                </span>
+                {conversation.lastMessage && (
+                  <span
+                    className={[
+                      "text-[10px] whitespace-nowrap flex-shrink-0 leading-tight",
+                      isActive ? "text-primary-foreground/70" : "text-muted-foreground",
+                    ].join(" ")}
+                  >
+                    {formatTime(conversation.updatedAt)}
+                  </span>
                 )}
               </div>
 
-              {/* Content */}
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center justify-between md:mb-2 mb-1">
-                  <h3
-                    className={`md:font-semibold font-medium md:text-base text-sm truncate ${
-                      isActive ? "text-white" : "text-foreground"
-                    }`}
-                  >
-                    {name}
-                    {conversation.isGroup && (
-                      <span className="ml-1 md:text-sm text-xs opacity-75">
-                        ({conversation.participants.length})
-                      </span>
-                    )}
-                  </h3>
-                  {conversation.lastMessage && (
-                    <span
-                      className={`md:text-sm text-xs md:font-medium font-normal ${
-                        isActive ? "text-muted" : "text-muted-foreground"
-                      }`}
-                    >
-                      {formatTime(conversation.updatedAt)}
-                    </span>
-                  )}
-                </div>
-
+              {/* Row 2: last message + unread badge */}
+              <div className="flex items-center justify-between gap-2">
                 <p
-                  className={`md:text-sm text-sm truncate leading-relaxed ${
-                    isActive ? "text-muted" : "text-muted-foreground"
-                  }`}
+                  className={[
+                    "text-xs truncate leading-snug",
+                    isActive ? "text-primary-foreground/75" : "text-muted-foreground",
+                  ].join(" ")}
                 >
                   {formatLastMessage(conversation)}
-                  {unreadCounts[conversation._id] > 0 && (
-                    <span
-                      className={`${
-                        isActive ? "text-muted" : "text-foreground"
-                      } font-medium`}
-                    >
-                      {" "}
-                      ({unreadCounts[conversation._id]})
-                    </span>
-                  )}
                 </p>
+                {unread > 0 && (
+                  <span
+                    className={[
+                      "flex-shrink-0 min-w-[1.1rem] h-[1.1rem] px-1 rounded-full flex items-center justify-center text-[9px] font-bold",
+                      isActive
+                        ? "bg-primary-foreground text-primary"
+                        : "bg-primary text-primary-foreground",
+                    ].join(" ")}
+                  >
+                    {unread > 99 ? "99+" : unread}
+                  </span>
+                )}
               </div>
             </div>
           </button>

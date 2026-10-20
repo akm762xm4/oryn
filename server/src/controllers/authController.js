@@ -1,4 +1,5 @@
 import jwt from "jsonwebtoken";
+import crypto from "crypto";
 import fs from "fs";
 import User from "../models/User.js";
 import { sendOTP } from "../utils/email.js";
@@ -128,6 +129,45 @@ export const login = async (req, res) => {
   }
 };
 
+// Demo login — creates or reuses a demo account for visitors/recruiters
+export const demoLogin = async (req, res) => {
+  try {
+    const DEMO_EMAIL = "demo@oryn.app";
+    const DEMO_USERNAME = "demo_visitor";
+    const DEMO_PASSWORD = "Demo@2024!";
+
+    let demoUser = await User.findOne({ email: DEMO_EMAIL });
+
+    if (!demoUser) {
+      // Create demo account on first hit
+      demoUser = new User({
+        username: DEMO_USERNAME,
+        email: DEMO_EMAIL,
+        password: DEMO_PASSWORD,
+        isVerified: true,
+      });
+      await demoUser.save();
+    }
+
+    const token = generateToken(demoUser._id);
+
+    res.json({
+      message: "Demo login successful! Exploring as demo visitor.",
+      token,
+      user: {
+        _id: demoUser._id,
+        username: demoUser.username,
+        email: demoUser.email,
+        avatar: demoUser.avatar,
+        isVerified: demoUser.isVerified,
+        isDemo: true,
+      },
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
 export const resendOTP = async (req, res) => {
   try {
     const { userId } = req.body;
@@ -153,6 +193,66 @@ export const resendOTP = async (req, res) => {
     await sendOTP(user.email, otp);
 
     res.json({ message: "OTP sent successfully" });
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
+export const forgotPassword = async (req, res) => {
+  try {
+    const { email } = req.body;
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      return res.json({
+        message: "If an account exists, a password reset link is available.",
+      });
+    }
+
+    const resetToken = crypto.randomBytes(32).toString("hex");
+    user.resetPasswordToken = crypto
+      .createHash("sha256")
+      .update(resetToken)
+      .digest("hex");
+    user.resetPasswordExpires = new Date(Date.now() + 60 * 60 * 1000);
+    await user.save();
+
+    const clientUrl = process.env.CLIENT_URL || "http://localhost:5173";
+    const resetUrl = `${clientUrl}/reset-password/${resetToken}`;
+    console.log(`Development password reset link for ${user.email}: ${resetUrl}`);
+
+    res.json({
+      message: "If an account exists, a password reset link is available.",
+      resetUrl,
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
+export const resetPassword = async (req, res) => {
+  try {
+    const { password } = req.body;
+    const resetPasswordToken = crypto
+      .createHash("sha256")
+      .update(req.params.token)
+      .digest("hex");
+
+    const user = await User.findOne({
+      resetPasswordToken,
+      resetPasswordExpires: { $gt: new Date() },
+    });
+
+    if (!user) {
+      return res.status(400).json({ message: "Invalid or expired reset link" });
+    }
+
+    user.password = password;
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpires = undefined;
+    await user.save();
+
+    res.json({ message: "Password reset successfully" });
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });
   }

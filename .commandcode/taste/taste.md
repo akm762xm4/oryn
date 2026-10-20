@@ -1,0 +1,1 @@
+- Prefers desktop UI layouts to be centered symmetrically, with equal-width sides or equal spacing from both edges. Confidence: 0.9

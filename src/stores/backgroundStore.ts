@@ -7,7 +7,7 @@ export const backgroundOptions = [
     id: "default",
     name: "Default",
     value: "bg-background",
-    preview: "#ffffff",
+    preview: "hsl(var(--background))",
     isImage: false,
     isTheme: false,
   },

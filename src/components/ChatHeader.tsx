@@ -180,6 +180,11 @@ export default function ChatHeader({
             onShowBackgroundModal={() => setShowBackgroundModal(true)}
             onShowDeleteConfirm={() => setShowDeleteConfirm(true)}
             onClearChat={() => setShowClearConfirm(true)}
+            onCloseChat={() => {
+              setActiveConversation(null);
+              setMessages([]);
+              navigate("/chat");
+            }}
             onShowGroupInfo={() => setShowGroupInfo(true)}
           />
         </div>

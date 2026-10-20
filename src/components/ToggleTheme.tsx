@@ -18,7 +18,7 @@ export const ThemeToggle = ({
       />
       <div
         className={`relative h-10 w-20 rounded-full border border-border transition-colors ${
-          isDark ? "bg-[#0b0f2a]" : "bg-muted"
+          isDark ? "bg-secondary" : "bg-muted"
         }`}
       >
         {/* Knob */}

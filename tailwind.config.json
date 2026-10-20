@@ -1,0 +1,52 @@
+{
+  "theme": {
+    "name": "Baroworks",
+    "description": "Official Baroworks shadcn/ui theme. Golden amber primary, near-black backgrounds, dark slate surfaces.",
+    "colors": {
+      "light": {
+        "--background": "0 0% 97%",
+        "--foreground": "0 0% 9%",
+        "--card": "0 0% 100%",
+        "--card-foreground": "0 0% 9%",
+        "--popover": "0 0% 100%",
+        "--popover-foreground": "0 0% 9%",
+        "--primary": "43 89% 53%",
+        "--primary-foreground": "0 0% 9%",
+        "--secondary": "0 0% 93%",
+        "--secondary-foreground": "0 0% 20%",
+        "--muted": "0 0% 93%",
+        "--muted-foreground": "0 0% 42%",
+        "--accent": "0 0% 93%",
+        "--accent-foreground": "0 0% 9%",
+        "--destructive": "352 82% 61%",
+        "--destructive-foreground": "0 0% 100%",
+        "--border": "0 0% 88%",
+        "--input": "0 0% 88%",
+        "--ring": "43 89% 53%",
+        "--radius": "0.5rem"
+      },
+      "dark": {
+        "--background": "0 0% 7%",
+        "--foreground": "0 0% 93%",
+        "--card": "0 0% 11%",
+        "--card-foreground": "0 0% 93%",
+        "--popover": "0 0% 11%",
+        "--popover-foreground": "0 0% 93%",
+        "--primary": "43 89% 53%",
+        "--primary-foreground": "0 0% 9%",
+        "--secondary": "0 0% 16%",
+        "--secondary-foreground": "0 0% 80%",
+        "--muted": "0 0% 16%",
+        "--muted-foreground": "0 0% 55%",
+        "--accent": "0 0% 16%",
+        "--accent-foreground": "0 0% 93%",
+        "--destructive": "352 82% 61%",
+        "--destructive-foreground": "0 0% 100%",
+        "--border": "0 0% 19%",
+        "--input": "0 0% 19%",
+        "--ring": "43 89% 53%",
+        "--radius": "0.5rem"
+      }
+    }
+  }
+}

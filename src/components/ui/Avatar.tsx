@@ -21,72 +21,46 @@ export default function Avatar({
   className = "",
   onClick,
 }: AvatarProps) {
-  const sizeClasses = {
-    sm: "w-8 h-8",
-    md: "w-10 h-10",
-    lg: "w-12 h-12",
-    xl: "w-16 h-16",
-  };
+  const sizes = { sm: "w-8 h-8", md: "w-9 h-9", lg: "w-11 h-11", xl: "w-14 h-14" };
+  const iconSizes = { sm: "w-3.5 h-3.5", md: "w-4 h-4", lg: "w-5 h-5", xl: "w-6 h-6" };
+  const textSizes = { sm: "text-[10px]", md: "text-xs", lg: "text-sm", xl: "text-base" };
+  const dotSizes = { sm: "w-2 h-2", md: "w-2.5 h-2.5", lg: "w-3 h-3", xl: "w-3.5 h-3.5" };
 
-  const iconSizeClasses = {
-    sm: "w-4 h-4",
-    md: "w-5 h-5", 
-    lg: "w-6 h-6",
-    xl: "w-8 h-8",
-  };
-
-  const textSizeClasses = {
-    sm: "text-xs",
-    md: "text-sm",
-    lg: "text-base",
-    xl: "text-lg",
-  };
-
-  const getInitials = (name: string) => {
-    return name
-      .split(" ")
-      .map((n) => n.charAt(0))
-      .join("")
-      .toUpperCase()
-      .slice(0, 2);
-  };
-
-  const handleClick = () => {
-    if (onClick) onClick();
-  };
+  const getInitials = (n: string) =>
+    n.split(" ").map((w) => w.charAt(0)).join("").toUpperCase().slice(0, 2);
 
   return (
-    <div className={`relative flex-shrink-0 ${onClick ? "cursor-pointer" : ""}`} onClick={handleClick}>
+    <div
+      className={`relative flex-shrink-0 ${onClick ? "cursor-pointer" : ""}`}
+      onClick={onClick}
+    >
       <div
-        className={`
-          ${sizeClasses[size]} rounded-full flex items-center justify-center overflow-hidden
-          ${isAI 
-            ? "bg-gradient-to-br from-purple-500 to-blue-600" 
-            : src 
-            ? "bg-cover bg-center" 
-            : "bg-primary"
-          }
-          ${className}
-        `}
+        className={[
+          sizes[size],
+          "rounded-full flex items-center justify-center overflow-hidden select-none",
+          isAI
+            ? "bg-gradient-to-br from-violet-500 to-primary"
+            : src
+            ? ""
+            : "bg-primary/80",
+          className,
+        ].join(" ")}
       >
         {isAI ? (
-          <Bot className={`${iconSizeClasses[size]} text-white`} />
+          <Bot className={`${iconSizes[size]} text-white`} />
         ) : src ? (
-          <img
-            src={src}
-            alt={alt || name}
-            className="w-full h-full rounded-full object-cover"
-          />
+          <img src={src} alt={alt || name} className="w-full h-full rounded-full object-cover" />
         ) : (
-          <span className={`text-white font-medium ${textSizeClasses[size]}`}>
-            {name ? getInitials(name) : <User className={iconSizeClasses[size]} />}
+          <span className={`text-white font-semibold ${textSizes[size]}`}>
+            {name ? getInitials(name) : <User className={iconSizes[size]} />}
           </span>
         )}
       </div>
 
-      {/* Online indicator */}
       {isOnline && !isAI && (
-        <div className="absolute -bottom-1 -right-1 w-3 h-3 md:w-4 md:h-4 bg-green-500 border-2 border-background rounded-full"></div>
+        <span
+          className={`absolute -bottom-0.5 -right-0.5 ${dotSizes[size]} bg-green-500 border-2 border-background rounded-full`}
+        />
       )}
     </div>
   );

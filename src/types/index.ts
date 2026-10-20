@@ -6,6 +6,7 @@ export interface User {
   isOnline: boolean;
   lastSeen: Date;
   isVerified: boolean;
+  isDemo?: boolean;
 }
 
 export interface Message {

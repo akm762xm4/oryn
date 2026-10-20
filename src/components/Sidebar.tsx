@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Search, Plus, Bot, X } from "lucide-react";
-import { Button, Input, Avatar } from "./ui";
+import { Button, Avatar } from "./ui";
 import { useAuthStore } from "../stores/authStore";
 import { useChatStore } from "../stores/chatStore";
 import { socketService } from "../lib/socket";
@@ -41,15 +41,11 @@ export default function Sidebar() {
 
   const filteredConversations = conversations.filter((conv) => {
     if (!searchQuery) return true;
-
     if (conv.isGroup) {
       return conv.groupName?.toLowerCase().includes(searchQuery.toLowerCase());
-    } else {
-      const otherUser = conv.participants.find((p) => p._id !== user?._id);
-      return otherUser?.username
-        .toLowerCase()
-        .includes(searchQuery.toLowerCase());
     }
+    const other = conv.participants.find((p) => p._id !== user?._id);
+    return other?.username.toLowerCase().includes(searchQuery.toLowerCase());
   });
 
   const handleLogout = () => {
@@ -59,36 +55,20 @@ export default function Sidebar() {
     toast.success("Logged out successfully");
   };
 
-  const clearSearch = () => {
-    setSearchQuery("");
-  };
-
   const createAIConversation = async () => {
     try {
-      // Create an AI conversation
       const response = await api.post("/chat/conversations", {
         isAI: true,
         isGroup: false,
       });
-
-      const isMobile = window.innerWidth < 768;
-
-      // Always set active conversation first so UI is ready
       setActiveConversation(response.data);
-
-      if (isMobile) {
-        // Navigate immediately on mobile
-        navigate(`/chat/${response.data._id}`);
-      }
-
+      if (window.innerWidth < 768) navigate(`/chat/${response.data._id}`);
       toast.success("AI chat started!");
-    } catch (error) {
-      console.error("AI conversation error:", error);
+    } catch {
       toast.error("Failed to start AI chat");
     }
   };
 
-  // Load suggested users (simple heuristic via search without query)
   useEffect(() => {
     (async () => {
       try {
@@ -96,17 +76,16 @@ export default function Sidebar() {
         const others = (res.data || [])
           .filter((u: any) => u._id !== user?._id)
           .slice(0, 5);
-        // eliminate who are in conversations already
         setSuggested(
           others.filter(
             (u: any) =>
               !conversations.some((c) =>
-                c.participants.find((p) => p._id === u._id)
-              )
-          )
+                c.participants.find((p) => p._id === u._id),
+              ),
+          ),
         );
       } catch {
-        // ignore
+        /* ignore */
       }
     })();
   }, [user?._id, conversations.length]);
@@ -119,7 +98,6 @@ export default function Sidebar() {
       });
       setActiveConversation(res.data);
       setConversations((convs) => {
-        // If conversation already exists, don't add
         if (convs.some((c) => c._id === res.data._id)) return convs;
         return [res.data, ...convs];
       });
@@ -130,76 +108,79 @@ export default function Sidebar() {
   };
 
   return (
-    <div className="w-full md:w-80 bg-card border-r border-border flex flex-col">
-      {/* Header */}
-      <div className="p-4 md:p-4 px-6 md:px-4 border-b border-border">
-        <div className="flex items-center justify-between mb-6 md:mb-4">
-          <div className="flex items-center space-x-2">
-            <img
-              src="/Oryn Full.png"
-              alt="Oryn"
-              className="h-10 md:h-8 w-auto object-contain"
-            />
+    <div
+      className="w-full md:w-72 lg:w-80 flex flex-col"
+      style={{
+        background: "hsl(var(--sidebar-bg))",
+        borderRight: "1px solid hsl(var(--sidebar-border))",
+      }}
+    >
+      {/* ── Header ── */}
+      <div
+        className="px-4 py-4 border-b"
+        style={{ borderColor: "hsl(var(--sidebar-border))" }}
+      >
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2.5">
+            <img src="/oryn-wordmark.svg" alt="Oryn" className="h-8 w-auto" />
+            {/* <span className="font-bold text-foreground text-base tracking-tight">Oryn</span> */}
           </div>
-          <div className="flex items-center space-x-2 md:space-x-1">
-            <SettingsMenu
-              onShowProfile={() => setShowProfile(true)}
-              onShowPreferences={() => setShowPrefs(true)}
-              onShowChangePassword={() => setShowChangePass(true)}
-              onShowLogoutConfirm={() => setShowLogoutConfirm(true)}
-              onShowAbout={() => setShowAbout(true)}
-            />
-          </div>
+          <SettingsMenu
+            onShowProfile={() => setShowProfile(true)}
+            onShowPreferences={() => setShowPrefs(true)}
+            onShowChangePassword={() => setShowChangePass(true)}
+            onShowLogoutConfirm={() => setShowLogoutConfirm(true)}
+            onShowAbout={() => setShowAbout(true)}
+          />
         </div>
 
         {/* Search */}
-        <Input
-          leftIcon={<Search className="w-4 h-4 text-muted-foreground" />}
-          rightIcon={
-            searchQuery ? (
-              <Button
-                type="button"
-                size="icon"
-                variant="ghost"
-                onClick={clearSearch}
-                className="absolute top-1/2 right-0 transform -translate-y-1/2 p-1 md:p-0.5 rounded-full hover:bg-muted-foreground/20 transition-colors touch-manipulation"
-                title="Clear search"
-              >
-                <X className="w-4 h-4 md:w-3 md:h-3 text-muted-foreground" />
-              </Button>
-            ) : undefined
-          }
-          placeholder="Search conversations..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="touch-manipulation py-3 md:py-3.5 md:text-sm text-xs"
-        />
-      </div>
-
-      {/* Action Buttons */}
-      <div className="p-4 md:p-4 px-6 md:px-4 border-b border-border">
-        <div className="flex space-x-2">
-          <Button
-            onClick={() => setShowNewChat(true)}
-            size="lg"
-            className="flex-1 py-4 md:py-2 px-6 md:px-4 shadow-sm"
-          >
-            <Plus className="w-4 h-4" />
-            New Chat
-          </Button>
-          <Button
-            onClick={createAIConversation}
-            size="lg"
-            className="py-4 md:py-2 px-6 md:px-4 bg-gradient-to-br from-purple-500 to-blue-600 hover:from-purple-600 hover:to-blue-700 shadow-md"
-            title="Chat with AI"
-          >
-            <Bot className="w-4 h-4" />
-          </Button>
+        <div className="relative">
+          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none">
+            <Search className="w-4 h-4" />
+          </span>
+          <input
+            className="w-full h-9 bg-card text-foreground text-sm border border-border rounded-xl pl-9 pr-9 placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/30 focus:border-primary transition-all"
+            placeholder="Search conversations…"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+          {searchQuery && (
+            <button
+              className="absolute right-2 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+              onClick={() => setSearchQuery("")}
+            >
+              <X className="w-3 h-3" />
+            </button>
+          )}
         </div>
       </div>
 
-      {/* Conversations List */}
-      <div className="flex-1 overflow-y-auto">
+      {/* ── Action buttons ── */}
+      <div
+        className="px-4 py-3 border-b flex gap-2"
+        style={{ borderColor: "hsl(var(--sidebar-border))" }}
+      >
+        <Button
+          onClick={() => setShowNewChat(true)}
+          size="md"
+          className="flex-1"
+        >
+          <Plus className="w-4 h-4" />
+          New Chat
+        </Button>
+        <Button
+          onClick={createAIConversation}
+          size="icon"
+          className="bg-gradient-to-br from-violet-500 to-primary hover:opacity-90 shadow-md h-9 w-9 flex-shrink-0"
+          title="Chat with AI Assistant"
+        >
+          <Bot className="w-4 h-4 text-white" />
+        </Button>
+      </div>
+
+      {/* ── Conversations list ── */}
+      <div className="flex-1 overflow-y-auto py-1">
         {isLoadingConversations ? (
           <ConversationSkeleton />
         ) : (
@@ -210,16 +191,17 @@ export default function Sidebar() {
         )}
       </div>
 
-      {/* User Info */}
-      {}
-      <div className="p-4 border-t border-border hidden md:block">
-        <Button
-          variant="ghost"
+      {/* ── Current user footer ── */}
+      <div
+        className="px-3 py-3 border-t hidden md:block"
+        style={{ borderColor: "hsl(var(--sidebar-border))" }}
+      >
+        <button
           onClick={() => setShowProfile(true)}
-          className="w-full justify-start p-2 h-auto hover:bg-muted"
+          className="w-full flex items-center gap-3 p-2 rounded-xl hover:bg-muted/60 transition-colors text-left"
         >
-          <Avatar src={user?.avatar} name={user?.username || ""} size="md" />
-          <div className="flex-1 min-w-0 text-left ml-3">
+          <Avatar src={user?.avatar} name={user?.username || ""} size="sm" />
+          <div className="flex-1 min-w-0">
             <p className="text-sm font-medium text-foreground truncate">
               {user?.username}
             </p>
@@ -227,42 +209,29 @@ export default function Sidebar() {
               {user?.email}
             </p>
           </div>
-          <div className="w-3 h-3 bg-accent rounded-full"></div>
-        </Button>
+          <div className="w-2 h-2 bg-green-500 rounded-full flex-shrink-0" />
+        </button>
       </div>
 
       {/* Modals */}
       {showNewChat && (
-        <NewChatModal
-          isOpen={showNewChat}
-          onClose={() => setShowNewChat(false)}
-        />
+        <NewChatModal isOpen onClose={() => setShowNewChat(false)} />
       )}
-
       {showProfile && (
-        <UserProfile
-          isOpen={showProfile}
-          onClose={() => setShowProfile(false)}
-        />
+        <UserProfile isOpen onClose={() => setShowProfile(false)} />
       )}
-
       {showLogoutConfirm && (
         <LogoutConfirmModal
-          isOpen={showLogoutConfirm}
+          isOpen
           onClose={() => setShowLogoutConfirm(false)}
           onConfirm={handleLogout}
         />
       )}
-
-      {showAbout && (
-        <AboutModal isOpen={showAbout} onClose={() => setShowAbout(false)} />
-      )}
-
+      {showAbout && <AboutModal isOpen onClose={() => setShowAbout(false)} />}
       <PreferencesModal
         isOpen={showPrefs}
         onClose={() => setShowPrefs(false)}
       />
-
       <ChangePasswordModal
         isOpen={showChangePass}
         onClose={() => setShowChangePass(false)}

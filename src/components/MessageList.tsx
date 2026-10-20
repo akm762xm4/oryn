@@ -269,40 +269,41 @@ const MessageList = memo(function MessageList() {
   if (messages.length === 0 && !isInitialLoading) {
     return (
       <div
-        className={`flex flex-1 items-center justify-center md:p-8 p-10 ${
-          currentBackground.isImage
-            ? ""
-            : isTheme
-            ? ""
-            : currentBackground.value
+        className={`flex flex-1 items-center justify-center p-8 ${
+          currentBackground.isImage ? "" : isTheme ? "" : currentBackground.value
         }`}
         style={
           currentBackground.isImage
-            ? {
-                backgroundImage: currentBackground.value,
-                backgroundSize: "cover",
-                backgroundPosition: "center",
-                backgroundRepeat: "no-repeat",
-                backgroundAttachment: "fixed",
-              }
+            ? { backgroundImage: currentBackground.value, backgroundSize: "cover", backgroundPosition: "center", backgroundRepeat: "no-repeat", backgroundAttachment: "fixed" }
             : isTheme && themeGradient
-            ? {
-                backgroundImage: themeGradient,
-              }
+            ? { backgroundImage: themeGradient }
             : {}
         }
       >
-        <div className="text-center max-w-md ">
-          <img
-            className="w-[80%] mx-auto"
-            src="/EmptyMsgState.png"
-            alt="Empty Message State"
-          />
-          <h3 className="md:text-xl text-lg font-semibold text-secondary-foreground/90 mb-2">
+        <div className="text-center max-w-xs mx-auto select-none">
+          {/* Minimal SVG illustration */}
+          <div className="flex justify-center mb-5">
+            <div className="relative w-24 h-24">
+              {/* Outer ring */}
+              <div className="absolute inset-0 rounded-full border-2 border-dashed border-border opacity-60 animate-[spin_20s_linear_infinite]" />
+              {/* Inner circle */}
+              <div className="absolute inset-3 rounded-full bg-muted/50 flex items-center justify-center">
+                <svg viewBox="0 0 40 40" className="w-10 h-10 opacity-50" fill="none">
+                  <path d="M8 14h24M8 20h16M8 26h20" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"/>
+                  <circle cx="32" cy="26" r="6" fill="hsl(var(--primary))" opacity="0.7"/>
+                  <path d="M30 26l1.5 1.5L34 24" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </div>
+              {/* Dot accents */}
+              <div className="absolute top-1 right-3 w-2 h-2 rounded-full bg-primary/40" />
+              <div className="absolute bottom-2 left-1 w-1.5 h-1.5 rounded-full bg-primary/25" />
+            </div>
+          </div>
+          <h3 className="text-base font-semibold text-foreground mb-1.5">
             No messages yet
           </h3>
-          <p className="md:text-sm text-xs text-secondary-foreground/70">
-            Say hello to start the conversation. Your messages will appear here.
+          <p className="text-xs text-muted-foreground leading-relaxed">
+            Say hello to start the conversation!<br />Your messages will appear here.
           </p>
         </div>
       </div>

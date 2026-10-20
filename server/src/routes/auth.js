@@ -2,11 +2,14 @@ import express from "express";
 import {
   register,
   login,
+  demoLogin,
   verifyOTP,
   resendOTP,
   updateProfile,
   uploadAvatar,
   changePassword,
+  forgotPassword,
+  resetPassword,
 } from "../controllers/authController.js";
 import rateLimit from "express-rate-limit";
 import multer from "multer";
@@ -44,8 +47,11 @@ const otpLimiter = rateLimit({
 // Public routes
 router.post("/register", authLimiter, register);
 router.post("/login", login);
+router.post("/demo-login", demoLogin);
 router.post("/verify-otp", authLimiter, verifyOTP);
 router.post("/resend-otp", otpLimiter, resendOTP);
+router.post("/forgot-password", authLimiter, forgotPassword);
+router.post("/reset-password/:token", resetPassword);
 
 // Protected routes
 router.put("/profile", authenticate, updateProfile);

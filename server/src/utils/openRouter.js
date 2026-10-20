@@ -1,8 +1,6 @@
 import OpenAI from "openai";
 
-// Check if OpenRouter API key is available
 if (!process.env.OPENROUTER_API_KEY) {
-  console.log("API Key:", process.env.OPENROUTER_API_KEY);
   console.error("OPENROUTER_API_KEY environment variable is missing!");
   process.exit(1);
 }
@@ -11,70 +9,71 @@ const openai = new OpenAI({
   apiKey: process.env.OPENROUTER_API_KEY,
   baseURL: "https://openrouter.ai/api/v1",
   defaultHeaders: {
-    "HTTP-Referer": "http://localhost:3000",
+    "HTTP-Referer": process.env.CLIENT_URL || "http://localhost:5173",
     "X-Title": "Oryn Chat App",
   },
 });
 
-// List of free models to try in order
+// Free models — ordered by reliability. First two are highest-quality fallbacks.
 const FREE_MODELS = [
   "google/gemini-2.0-flash-exp:free",
   "deepseek/deepseek-chat-v3-0324:free",
+  "meta-llama/llama-3.3-8b-instruct:free",
   "meta-llama/llama-3.2-3b-instruct:free",
   "microsoft/phi-3-mini-128k-instruct:free",
   "huggingfaceh4/zephyr-7b-beta:free",
 ];
+
+// Small delay between retry attempts to reduce cascading rate-limits
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 export const generateAIResponse = async (message, conversationHistory = []) => {
   const messages = [
     {
       role: "system",
       content:
-        "You are a helpful AI assistant in Oryn chat application. Keep responses concise and friendly.",
+        "You are Oryn AI, a helpful and friendly assistant built into the Oryn chat application. Keep responses clear, concise and conversational. Use markdown when it helps readability.",
     },
-    ...conversationHistory.slice(-5).map((msg) => ({
+    ...conversationHistory.slice(-6).map((msg) => ({
       role: msg.isAI ? "assistant" : "user",
       content: msg.content,
     })),
-    {
-      role: "user",
-      content: message,
-    },
+    { role: "user", content: message },
   ];
 
-  // Try each model in order until one works
   for (let i = 0; i < FREE_MODELS.length; i++) {
     const model = FREE_MODELS[i];
     try {
-      console.log(`Trying model: ${model}`);
-
+      console.log(`[AI] Trying model: ${model}`);
       const completion = await openai.chat.completions.create({
         model,
         messages,
-        max_tokens: 150,
+        max_tokens: 512,
         temperature: 0.7,
       });
-
-      console.log(`Success with model: ${model}`);
-      return completion.choices[0].message.content;
+      const text = completion.choices[0]?.message?.content;
+      if (text) {
+        console.log(`[AI] ✅ Success with: ${model}`);
+        return text;
+      }
     } catch (error) {
-      console.error(`Model ${model} failed:`, error.message);
+      const status = error?.status || error?.response?.status;
+      console.warn(`[AI] ❌ Model ${model} failed (${status}): ${error?.message}`);
 
-      // If it's a rate limit error and we have more models to try, continue
-      if (error.status === 429 && i < FREE_MODELS.length - 1) {
-        console.log(`Rate limited on ${model}, trying next model...`);
-        continue;
+      // Rate-limited — wait briefly before trying next model
+      if (status === 429) {
+        if (i < FREE_MODELS.length - 1) {
+          await sleep(400);
+          continue;
+        }
       }
 
-      // If it's the last model or a different error, return fallback
-      if (i === FREE_MODELS.length - 1) {
-        console.error("All models failed or rate limited");
-        return "Sorry, all AI models are currently busy. Please try again in a few moments.";
-      }
+      // Context-length / other 4xx — skip immediately
+      if (i < FREE_MODELS.length - 1) continue;
     }
   }
 
-  return "Sorry, I encountered an error. Please try again later.";
+  return "I'm having trouble connecting right now. All AI models seem busy — please try again in a moment! 🤖";
 };
 
 export const generateAIResponseWithModel = async (
@@ -82,40 +81,34 @@ export const generateAIResponseWithModel = async (
   conversationHistory = [],
   model = "google/gemini-2.0-flash-exp:free"
 ) => {
-  try {
-    const messages = [
-      {
-        role: "system",
-        content:
-          "You are a helpful AI assistant in Oryn chat application. Keep responses concise and friendly.",
-      },
-      ...conversationHistory.slice(-5).map((msg) => ({
-        role: msg.isAI ? "assistant" : "user",
-        content: msg.content,
-      })),
-      {
-        role: "user",
-        content: message,
-      },
-    ];
+  const messages = [
+    {
+      role: "system",
+      content:
+        "You are Oryn AI, a helpful and friendly assistant built into the Oryn chat application. Keep responses clear, concise and conversational. Use markdown when it helps readability.",
+    },
+    ...conversationHistory.slice(-6).map((msg) => ({
+      role: msg.isAI ? "assistant" : "user",
+      content: msg.content,
+    })),
+    { role: "user", content: message },
+  ];
 
+  try {
     const completion = await openai.chat.completions.create({
       model,
       messages,
-      max_tokens: 150,
+      max_tokens: 512,
       temperature: 0.7,
     });
-
-    return completion.choices[0].message.content;
+    const text = completion.choices[0]?.message?.content;
+    if (text) return text;
   } catch (error) {
-    console.error("OpenRouter API error:", error);
-
-    // If the specified model fails, try the fallback system
-    if (error.status === 429) {
-      console.log("Specified model rate limited, trying fallback system...");
+    console.warn(`[AI] Model ${model} failed, using fallback: ${error?.message}`);
+    if (error?.status === 429) {
       return generateAIResponse(message, conversationHistory);
     }
-
-    return "Sorry, I encountered an error. Please try again later.";
   }
+
+  return generateAIResponse(message, conversationHistory);
 };

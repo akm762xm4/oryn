@@ -7,6 +7,7 @@ import MessageInput from "./MessageInput";
 import MediaModal from "./MediaModal";
 import AboutModal from "./AboutModal";
 import GroupInfoModal from "./GroupInfoModal";
+import { MessageCircle, Bot, Users, Sparkles } from "lucide-react";
 
 interface ChatAreaProps {
   showBackButton?: boolean;
@@ -20,30 +21,22 @@ export default function ChatArea({ showBackButton = false }: ChatAreaProps) {
   const { activeConversation } = useChatStore();
 
   useEffect(() => {
-    const handler = () => setShowMedia(true);
-    const aboutHandler = () => setShowAbout(true);
-    const groupInfoHandler = () => setShowGroupInfo(true);
-    window.addEventListener("open-view-media", handler as EventListener);
-    window.addEventListener("open-about", aboutHandler as EventListener);
-    window.addEventListener(
-      "open-group-info",
-      groupInfoHandler as EventListener
-    );
+    const h1 = () => setShowMedia(true);
+    const h2 = () => setShowAbout(true);
+    const h3 = () => setShowGroupInfo(true);
+    window.addEventListener("open-view-media", h1 as EventListener);
+    window.addEventListener("open-about", h2 as EventListener);
+    window.addEventListener("open-group-info", h3 as EventListener);
     return () => {
-      window.removeEventListener("open-view-media", handler as EventListener);
-      window.removeEventListener("open-about", aboutHandler as EventListener);
-      window.removeEventListener(
-        "open-group-info",
-        groupInfoHandler as EventListener
-      );
+      window.removeEventListener("open-view-media", h1 as EventListener);
+      window.removeEventListener("open-about", h2 as EventListener);
+      window.removeEventListener("open-group-info", h3 as EventListener);
     };
   }, []);
 
   useEffect(() => {
     if (!activeConversation) return;
-
     socketService.joinConversation(activeConversation._id);
-
     return () => {
       socketService.leaveConversation(activeConversation._id);
     };
@@ -51,30 +44,58 @@ export default function ChatArea({ showBackButton = false }: ChatAreaProps) {
 
   if (!activeConversation) {
     return (
-      <div className="flex-1 flex items-center justify-center bg-background">
-        <div className="text-center md:space-y-8 space-y-6 md:px-6 px-4">
-          <div className="flex justify-center">
-            <img
-              className="md:h-28 h-24 w-auto object-contain"
-              src="/Oryn Full.png"
-              alt="Oryn Logo"
-            />
+      <div className="flex-1 flex items-center justify-center bg-background overflow-hidden relative">
+        {/* Subtle background */}
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            background:
+              "radial-gradient(ellipse 60% 50% at 50% 40%, hsl(24 95% 53% / 0.06) 0%, transparent 70%)",
+          }}
+        />
+
+        <div className="relative z-10 text-center px-6 max-w-lg mx-auto">
+          {/* Logo */}
+          <div className="flex justify-center mb-6">
+            <div className="relative">
+              <img
+                src="/oryn-wordmark.svg"
+                alt="Oryn"
+                className="h-20 w-auto"
+              />
+            </div>
           </div>
-          <div className="md:space-y-4 space-y-3">
-            <h2 className="md:text-4xl text-3xl font-bold text-foreground">
-              Welcome to Oryn
-            </h2>
-            <p className="text-muted-foreground max-w-lg mx-auto md:text-xl text-lg leading-relaxed">
-              Your intelligent conversation companion is ready to help. Select a
-              conversation from the sidebar to continue, or start a new chat to
-              begin.
-            </p>
+
+          <h2 className="text-2xl font-bold text-foreground mb-3">
+            Welcome to Oryn
+          </h2>
+          <p className="text-muted-foreground leading-relaxed mb-8 text-sm">
+            Your intelligent conversation companion. Select an existing
+            conversation or start something new.
+          </p>
+
+          {/* Feature hints */}
+          <div className="grid grid-cols-3 gap-3">
+            {[
+              { icon: MessageCircle, label: "Start a chat" },
+              { icon: Bot, label: "Ask AI" },
+              { icon: Users, label: "Create group" },
+            ].map(({ icon: Icon, label }) => (
+              <div
+                key={label}
+                className="flex flex-col items-center gap-2 p-3 rounded-xl border border-border bg-card"
+              >
+                <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                  <Icon className="w-4 h-4 text-primary" />
+                </div>
+                <span className="text-xs text-muted-foreground">{label}</span>
+              </div>
+            ))}
           </div>
-          <div className="flex flex-col md:flex-row gap-3 justify-center items-center md:text-base text-sm text-muted-foreground">
-            <span className="flex items-center gap-2">
-              <div className="md:w-3 md:h-3 w-2 h-2 bg-green-500 rounded-full"></div>
-              Ready to chat
-            </span>
+
+          <div className="flex items-center justify-center gap-2 mt-6 text-xs text-muted-foreground">
+            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+            Ready to chat
           </div>
         </div>
       </div>
@@ -82,7 +103,7 @@ export default function ChatArea({ showBackButton = false }: ChatAreaProps) {
   }
 
   return (
-    <div className="flex-1 flex flex-col bg-background">
+    <div className="flex-1 flex flex-col bg-background overflow-hidden">
       <ChatHeader showBackButton={showBackButton} />
       <MessageList />
       <MessageInput />
@@ -92,9 +113,7 @@ export default function ChatArea({ showBackButton = false }: ChatAreaProps) {
         onClose={() => setShowMedia(false)}
         conversationId={activeConversation?._id || ""}
       />
-
       <AboutModal isOpen={showAbout} onClose={() => setShowAbout(false)} />
-
       {(activeConversation as any)?.isGroup && (
         <GroupInfoModal
           isOpen={showGroupInfo}

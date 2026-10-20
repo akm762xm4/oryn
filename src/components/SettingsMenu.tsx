@@ -1,11 +1,8 @@
-import { Settings, User, Moon, Sun, LogOut } from "lucide-react";
-import { useThemeStore } from "../stores/themeStore";
 import {
-  Button,
-  DropdownMenu,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-} from "./ui";
+  Settings, User, Lock, Moon, Sun, LogOut, Volume2, Info,
+} from "lucide-react";
+import { useThemeStore } from "../stores/themeStore";
+import { Button, DropdownMenu, DropdownMenuItem, DropdownMenuSeparator } from "./ui";
 import { ThemeToggle } from "./ToggleTheme";
 
 interface SettingsMenuProps {
@@ -29,15 +26,16 @@ export default function SettingsMenu({
     <Button
       type="button"
       variant="ghost"
-      className="p-3 md:p-2 rounded-xl md:rounded-lg hover:bg-muted transition-colors touch-manipulation"
-      title="Profile settings"
+      size="icon"
+      className="hover:bg-muted transition-colors"
+      title="Settings"
     >
-      <Settings className="w-5 h-5 md:w-4 md:h-4" />
+      <Settings className="w-4 h-4" />
     </Button>
   );
 
   return (
-    <DropdownMenu trigger={trigger} className="w-64">
+    <DropdownMenu trigger={trigger} className="w-60">
       <DropdownMenuSeparator>Profile & Account</DropdownMenuSeparator>
 
       <DropdownMenuItem
@@ -47,27 +45,39 @@ export default function SettingsMenu({
         Profile Settings
       </DropdownMenuItem>
 
-      <DropdownMenuItem onClick={onShowChangePassword} icon={<span>🔒</span>}>
+      <DropdownMenuItem
+        onClick={onShowChangePassword}
+        icon={<Lock className="w-4 h-4" />}
+      >
         Privacy & Security
       </DropdownMenuItem>
 
       <DropdownMenuSeparator>Preferences</DropdownMenuSeparator>
 
-      <div className="px-4 py-2.5 flex items-center justify-between">
-        <span className="flex items-center space-x-3 text-sm">
-          {isDark ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
-          <span>Appearance</span>
+      {/* Appearance row — inline toggle */}
+      <div className="px-3 py-2.5 flex items-center justify-between">
+        <span className="flex items-center gap-3 text-sm text-foreground">
+          {isDark
+            ? <Moon className="w-4 h-4 text-muted-foreground" />
+            : <Sun className="w-4 h-4 text-muted-foreground" />}
+          Appearance
         </span>
         <ThemeToggle isDark={isDark} toggleTheme={toggleTheme} />
       </div>
 
-      <DropdownMenuItem onClick={onShowPreferences} icon={<span>🔊</span>}>
+      <DropdownMenuItem
+        onClick={onShowPreferences}
+        icon={<Volume2 className="w-4 h-4" />}
+      >
         Sound & Vibration
       </DropdownMenuItem>
 
       <DropdownMenuSeparator>Support</DropdownMenuSeparator>
 
-      <DropdownMenuItem onClick={onShowAbout} icon={<span>ℹ️</span>}>
+      <DropdownMenuItem
+        onClick={onShowAbout}
+        icon={<Info className="w-4 h-4" />}
+      >
         About Oryn
       </DropdownMenuItem>
 

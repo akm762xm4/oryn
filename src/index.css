@@ -1,274 +1,372 @@
 @import "tailwindcss";
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap");
+
+/* ================================================================
+   BAROWORKS THEME — Oryn Chat
+   Golden amber (#E6A817) primary · Near-black (#111) background
+   Exact values from the Baroworks shadcn/ui theme preview
+   ================================================================ */
 
 :root {
-  /* Light theme colors */
-  --background: 0 0% 100%;
-  --foreground: 222.2 84% 4.9%;
-  --card: 0 0% 100%;
-  --card-foreground: 222.2 84% 4.9%;
-  --popover: 0 0% 100%;
-  --popover-foreground: 222.2 84% 4.9%;
-  --primary: 221.2 83.2% 53.3%;
-  --primary-foreground: 210 40% 98%;
-  --secondary: 210 40% 96%;
-  --secondary-foreground: 222.2 84% 4.9%;
-  --muted: 210 40% 96%;
-  --muted-foreground: 215.4 16.3% 46.9%;
-  --accent: 210 40% 96%;
-  --accent-foreground: 222.2 84% 4.9%;
-  --destructive: 0 84.2% 60.2%;
-  --destructive-foreground: 210 40% 98%;
-  --border: 214.3 31.8% 91.4%;
-  --input: 214.3 31.8% 91.4%;
-  --ring: 221.2 83.2% 53.3%;
-  --radius: 0.5rem;
+  /* ── Light mode ── */
+  --background:        0 0% 97%;
+  --foreground:        0 0% 9%;
+  --card:              0 0% 100%;
+  --card-foreground:   0 0% 9%;
+  --popover:           0 0% 100%;
+  --popover-foreground:0 0% 9%;
+  --primary:           43 89% 53%;       /* golden amber  #E6A817 */
+  --primary-foreground:0 0% 9%;          /* dark text on amber */
+  --secondary:         0 0% 93%;
+  --secondary-foreground:0 0% 20%;
+  --muted:             0 0% 93%;
+  --muted-foreground:  0 0% 42%;
+  --accent:            0 0% 93%;
+  --accent-foreground: 0 0% 9%;
+  --destructive:       352 82% 61%;      /* coral-red #F05F70 */
+  --destructive-foreground:0 0% 100%;
+  --border:            0 0% 88%;
+  --input:             0 0% 88%;
+  --ring:              43 89% 53%;
+  --radius:            0.5rem;
+
+  /* Sidebar */
+  --sidebar-bg:        0 0% 95%;
+  --sidebar-border:    0 0% 88%;
 }
 
 .dark {
-  --background: 222.2 84% 4.9%;
-  --foreground: 210 40% 98%;
-  --card: 222.2 84% 4.9%;
-  --card-foreground: 210 40% 98%;
-  --popover: 222.2 84% 4.9%;
-  --popover-foreground: 210 40% 98%;
-  --primary: 217.2 91.2% 59.8%;
-  --primary-foreground: 222.2 84% 4.9%;
-  --secondary: 217.2 32.6% 17.5%;
-  --secondary-foreground: 210 40% 98%;
-  --muted: 217.2 32.6% 17.5%;
-  --muted-foreground: 215 20.2% 65.1%;
-  --accent: 217.2 32.6% 17.5%;
-  --accent-foreground: 210 40% 98%;
-  --destructive: 0 62.8% 30.6%;
-  --destructive-foreground: 210 40% 98%;
-  --border: 217.2 32.6% 17.5%;
-  --input: 217.2 32.6% 17.5%;
-  --ring: 224.3 76.3% 94.1%;
+  /* ── Dark mode ── */
+  --background:        0 0% 7%;          /* #121212 near-black */
+  --foreground:        0 0% 93%;
+  --card:              0 0% 11%;         /* #1c1c1c */
+  --card-foreground:   0 0% 93%;
+  --popover:           0 0% 11%;
+  --popover-foreground:0 0% 93%;
+  --primary:           43 89% 53%;       /* same golden amber in dark */
+  --primary-foreground:0 0% 9%;
+  --secondary:         0 0% 16%;         /* #292929 */
+  --secondary-foreground:0 0% 80%;
+  --muted:             0 0% 16%;
+  --muted-foreground:  0 0% 55%;
+  --accent:            0 0% 16%;
+  --accent-foreground: 0 0% 93%;
+  --destructive:       352 82% 61%;
+  --destructive-foreground:0 0% 100%;
+  --border:            0 0% 19%;         /* #303030 */
+  --input:             0 0% 19%;
+  --ring:              43 89% 53%;
+  --radius:            0.5rem;
+
+  --sidebar-bg:        0 0% 9%;
+  --sidebar-border:    0 0% 16%;
 }
 
-/* Remove media query dark mode to avoid conflicts with class-based dark mode */
-
+/* ── Tailwind v4 CSS theme bridge ── */
 @theme {
-  --color-background: hsl(var(--background));
-  --color-foreground: hsl(var(--foreground));
-  --color-card: hsl(var(--card));
-  --color-card-foreground: hsl(var(--card-foreground));
-  --color-popover: hsl(var(--popover));
+  --color-background:         hsl(var(--background));
+  --color-foreground:         hsl(var(--foreground));
+  --color-card:               hsl(var(--card));
+  --color-card-foreground:    hsl(var(--card-foreground));
+  --color-popover:            hsl(var(--popover));
   --color-popover-foreground: hsl(var(--popover-foreground));
-  --color-primary: hsl(var(--primary));
+  --color-primary:            hsl(var(--primary));
   --color-primary-foreground: hsl(var(--primary-foreground));
-  --color-secondary: hsl(var(--secondary));
-  --color-secondary-foreground: hsl(var(--secondary-foreground));
-  --color-muted: hsl(var(--muted));
-  --color-muted-foreground: hsl(var(--muted-foreground));
-  --color-accent: hsl(var(--accent));
-  --color-accent-foreground: hsl(var(--accent-foreground));
-  --color-destructive: hsl(var(--destructive));
-  --color-destructive-foreground: hsl(var(--destructive-foreground));
-  --color-border: hsl(var(--border));
-  --color-input: hsl(var(--input));
-  --color-ring: hsl(var(--ring));
-  --radius: var(--radius);
+  --color-secondary:          hsl(var(--secondary));
+  --color-secondary-foreground:hsl(var(--secondary-foreground));
+  --color-muted:              hsl(var(--muted));
+  --color-muted-foreground:   hsl(var(--muted-foreground));
+  --color-accent:             hsl(var(--accent));
+  --color-accent-foreground:  hsl(var(--accent-foreground));
+  --color-destructive:        hsl(var(--destructive));
+  --color-destructive-foreground:hsl(var(--destructive-foreground));
+  --color-border:             hsl(var(--border));
+  --color-input:              hsl(var(--input));
+  --color-ring:               hsl(var(--ring));
+  --font-sans: Inter, system-ui, -apple-system, sans-serif;
+  --font-mono: "JetBrains Mono", "Fira Code", monospace;
 }
+
+/* ================================================================
+   BASE
+   ================================================================ */
 
 @layer base {
-  * {
-    border-color: theme(colors.border);
-  }
+  * { border-color: hsl(var(--border)); box-sizing: border-box; }
 
   body {
-    @apply bg-background text-foreground font-sans antialiased;
+    @apply bg-background text-foreground antialiased;
+    font-family: Inter, system-ui, -apple-system, sans-serif;
+    font-feature-settings: "cv11", "ss01";
   }
 
-  /* Custom scrollbar */
-  ::-webkit-scrollbar {
-    @apply w-2;
+  /* ── Scrollbar ── */
+  ::-webkit-scrollbar            { width: 4px; height: 4px; }
+  ::-webkit-scrollbar-track      { background: transparent; }
+  ::-webkit-scrollbar-thumb      { background: hsl(var(--muted-foreground)/0.25); border-radius: 999px; }
+  ::-webkit-scrollbar-thumb:hover{ background: hsl(var(--muted-foreground)/0.45); }
+
+  /* ── Checkbox ── */
+  input[type="checkbox"] {
+    appearance: none; -webkit-appearance: none;
+    width: 1rem; height: 1rem;
+    border: 1.5px solid hsl(var(--border));
+    border-radius: 0.25rem;
+    background: hsl(var(--card));
+    cursor: pointer;
+    display: inline-flex; align-items: center; justify-content: center;
+    transition: background .15s, border-color .15s;
+    vertical-align: middle; flex-shrink: 0;
+  }
+  input[type="checkbox"]:checked {
+    background: hsl(var(--primary)); border-color: hsl(var(--primary));
+  }
+  input[type="checkbox"]:checked::after {
+    content: "";
+    display: block; width: 0.3rem; height: 0.55rem;
+    border: 2px solid hsl(var(--primary-foreground));
+    border-top: none; border-left: none;
+    transform: rotate(45deg) translateY(-1px);
+  }
+  input[type="checkbox"]:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px hsl(var(--ring)/0.3);
   }
 
-  ::-webkit-scrollbar-track {
-    @apply bg-muted;
+  /* ── Radio ── */
+  input[type="radio"] {
+    appearance: none; -webkit-appearance: none;
+    width: 1rem; height: 1rem;
+    border: 1.5px solid hsl(var(--border)); border-radius: 50%;
+    background: hsl(var(--card)); cursor: pointer;
+    transition: background .15s, border-color .15s;
+    display: inline-flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  input[type="radio"]:checked {
+    border-color: hsl(var(--primary)); background: hsl(var(--primary));
+    box-shadow: inset 0 0 0 3px hsl(var(--card));
+  }
+  input[type="radio"]:focus-visible {
+    outline: none; box-shadow: 0 0 0 3px hsl(var(--ring)/0.3);
   }
 
-  ::-webkit-scrollbar-thumb {
-    @apply bg-muted-foreground/30 rounded-full;
+  /* ── Select ── */
+  select {
+    appearance: none; background-color: hsl(var(--card));
+    color: hsl(var(--foreground));
+    border: 1.5px solid hsl(var(--border)); border-radius: var(--radius);
+    padding: 0.5rem 2.25rem 0.5rem 0.75rem;
+    font-size: 0.875rem; cursor: pointer; width: 100%;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 0.75rem center;
+    transition: border-color .15s, box-shadow .15s;
   }
-
-  ::-webkit-scrollbar-thumb:hover {
-    @apply bg-muted-foreground/50;
+  select:focus {
+    outline: none; border-color: hsl(var(--primary));
+    box-shadow: 0 0 0 3px hsl(var(--ring)/0.2);
   }
 }
+
+/* ================================================================
+   COMPONENTS
+   ================================================================ */
 
 @layer components {
-  /* Auth pages gradient background */
+
+  /* ── Auth background ── */
   .auth-background {
-    background: radial-gradient(
-      circle at top center,
-      #0f172a 0%,
-      #0ea5e9 40%,
-      #000000 100%
-    );
-    @apply min-h-screen w-full;
+    min-height: 100vh; width: 100%;
+    background: radial-gradient(ellipse 80% 50% at 50% -5%,
+      hsl(43 89% 53% / 0.15) 0%, transparent 60%),
+      hsl(var(--background));
+    position: relative; overflow: hidden;
   }
+  .auth-background::before {
+    content: ""; position: absolute; inset: 0;
+    background-image:
+      radial-gradient(circle at 15% 85%, hsl(43 89% 53% / 0.07) 0%, transparent 45%),
+      radial-gradient(circle at 85% 15%, hsl(43 89% 53% / 0.05) 0%, transparent 45%);
+    pointer-events: none; z-index: 0;
+  }
+  .auth-background > * { position: relative; z-index: 1; }
 
-  /* Message components */
+  /* ── Message bubbles ── */
   .message-bubble {
-    @apply max-w-xs lg:max-w-md px-4 py-2 rounded-2xl break-words;
+    @apply max-w-xs lg:max-w-md px-3.5 py-2.5 rounded-2xl break-words text-sm leading-relaxed;
   }
-
   .message-sent {
-    @apply bg-primary text-primary-foreground ml-auto;
+    background: hsl(var(--primary));
+    color: hsl(var(--primary-foreground));
+    @apply rounded-br-sm;
   }
-
   .message-received {
-    @apply bg-muted text-muted-foreground;
+    background: hsl(var(--secondary));
+    color: hsl(var(--foreground));
+    @apply rounded-bl-sm;
   }
-
   .message-ai {
-    @apply bg-accent text-accent-foreground border border-border;
+    background: hsl(var(--secondary));
+    color: hsl(var(--foreground));
+    @apply border border-border rounded-bl-sm;
   }
 
-  /* Typing indicator */
-  .typing-indicator {
-    @apply flex space-x-1;
-  }
-
+  /* ── Typing indicator ── */
+  .typing-indicator { @apply flex space-x-1; }
   .typing-dot {
-    @apply md:w-2 w-1.5 md:h-2 h-1.5 bg-muted-foreground rounded-full;
-    animation: typingDotBounce 1.4s ease-in-out infinite both;
+    @apply w-1.5 h-1.5 rounded-full;
+    background: hsl(var(--primary));
+    animation: typingBounce 1.4s ease-in-out infinite both;
     will-change: transform;
   }
+  .typing-dot:nth-child(1) { animation-delay: 0ms; }
+  .typing-dot:nth-child(2) { animation-delay: 160ms; }
+  .typing-dot:nth-child(3) { animation-delay: 320ms; }
 
-  .typing-dot:nth-child(1) {
-    animation-delay: 0ms;
-  }
-  .typing-dot:nth-child(2) {
-    animation-delay: 160ms;
-  }
-  .typing-dot:nth-child(3) {
-    animation-delay: 320ms;
-  }
-
-  /* Legacy button classes - use UI components instead */
-  .btn-primary {
-    @apply bg-primary text-primary-foreground hover:bg-primary/90 px-4 py-2 rounded-lg font-medium transition-colors;
-  }
-
-  /* Legacy input class - use UI Input component instead */
+  /* ── Input base ── */
   .input {
-    @apply w-full rounded-lg border border-border bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary disabled:cursor-not-allowed disabled:opacity-50;
+    @apply w-full bg-card text-foreground border border-border rounded-lg
+      px-4 py-2.5 text-sm placeholder:text-muted-foreground
+      focus:outline-none focus:ring-2 focus:border-primary
+      disabled:cursor-not-allowed disabled:opacity-50 transition-all duration-150;
+    --tw-ring-color: hsl(var(--ring)/0.25);
   }
+
+  /* ── Sidebar ── */
+  .sidebar-root {
+    background: hsl(var(--sidebar-bg));
+    border-right: 1px solid hsl(var(--sidebar-border));
+  }
+
+  /* ── Conv item ── */
+  .conv-item { @apply flex items-center gap-3 px-3 py-2.5 cursor-pointer rounded-xl mx-1 transition-all duration-150; }
+  .conv-item:hover  { background: hsl(var(--muted)/0.7); }
+  .conv-item.active { background: hsl(var(--primary)); color: hsl(var(--primary-foreground)); }
 }
 
-/* Essential animations */
-@keyframes typingDotBounce {
-  0%,
-  80%,
-  100% {
-    transform: scale(0.8) translateY(0);
-    opacity: 0.5;
-  }
-  40% {
-    transform: scale(1.2) translateY(-8px);
-    opacity: 1;
-  }
+/* ================================================================
+   REACT-HOT-TOAST
+   ================================================================ */
+
+[data-hot-toast] {
+  font-family: Inter, system-ui, sans-serif !important;
+  border-radius: 0.625rem !important;
+  font-size: 0.875rem !important;
+  padding: 0.75rem 1rem !important;
+  background: hsl(var(--card)) !important;
+  color: hsl(var(--foreground)) !important;
+  border: 1px solid hsl(var(--border)) !important;
+  box-shadow: 0 4px 20px hsl(0 0% 0% / 0.12), 0 1px 4px hsl(0 0% 0% / 0.06) !important;
+  max-width: 360px !important;
+}
+[data-hot-toast][data-type="success"] { border-color: hsl(142 72% 50% / 0.35) !important; }
+[data-hot-toast][data-type="error"]   { border-color: hsl(352 82% 61% / 0.35) !important; }
+.dark [data-hot-toast] {
+  box-shadow: 0 4px 24px hsl(0 0% 0% / 0.5), 0 1px 4px hsl(0 0% 0% / 0.3) !important;
 }
 
-@keyframes typingSlideUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px) scale(0.95);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
+/* ================================================================
+   ANIMATIONS
+   ================================================================ */
+
+@keyframes typingBounce {
+  0%, 80%, 100% { transform: scale(0.85) translateY(0); opacity: 0.5; }
+  40%           { transform: scale(1.15) translateY(-6px); opacity: 1; }
+}
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(14px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position:  200% 0; }
+}
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50%       { transform: translateY(-8px); }
 }
 
-.animate-typing-enter {
-  animation: typingSlideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+.animate-slide-up    { animation: slideUp 0.3s cubic-bezier(0.16,1,0.3,1) both; }
+.animate-fade-in     { animation: fadeIn 0.25s ease both; }
+.animate-float       { animation: float 4s ease-in-out infinite; }
+.animate-typing-enter{ animation: slideUp 0.4s cubic-bezier(0.16,1,0.3,1); }
+
+/* Skeleton shimmer */
+.skeleton {
+  background: linear-gradient(90deg,
+    hsl(var(--muted)) 0%, hsl(var(--secondary)) 50%, hsl(var(--muted)) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: var(--radius);
 }
 
-/* Performance optimizations */
-.typing-indicator-container,
-.typing-bubble {
+/* ================================================================
+   PERFORMANCE
+   ================================================================ */
+.typing-indicator-container, .typing-bubble {
   will-change: transform, opacity;
   backface-visibility: hidden;
 }
-/* Code highlighting */
+
+/* ================================================================
+   CODE HIGHLIGHTING
+   ================================================================ */
 @import "highlight.js/styles/github-dark.css";
+.hljs { @apply bg-secondary text-foreground rounded-xl p-4 text-xs font-mono overflow-x-auto; }
 
-.hljs {
-  @apply bg-muted text-foreground rounded-lg p-3 text-xs font-mono overflow-x-auto;
+/* ================================================================
+   AI MARKDOWN PROSE
+   ================================================================ */
+.prose-ai { @apply text-sm max-w-none leading-relaxed; }
+.prose-ai h1,.prose-ai h2,.prose-ai h3,.prose-ai h4 {
+  @apply text-foreground font-semibold mt-4 mb-2 first:mt-0;
 }
-
-.dark .hljs {
-  @apply bg-gray-800 text-gray-100;
-}
-
-/* AI message markdown styles */
-.prose-ai {
-  @apply text-sm max-w-none;
-}
-
-.prose-ai h1,
-.prose-ai h2,
-.prose-ai h3,
-.prose-ai h4,
-.prose-ai h5,
-.prose-ai h6 {
-  @apply text-inherit font-semibold mt-4 mb-2 first:mt-0 text-sm;
-}
-
-.prose-ai h1 {
-  @apply text-base;
-}
-
-.prose-ai p {
-  @apply text-inherit mb-3 last:mb-0;
-}
-
-.prose-ai ul,
-.prose-ai ol {
-  @apply mb-3 pl-4;
-}
-
-.prose-ai li {
-  @apply mb-1;
-}
-
-.prose-ai code {
-  @apply bg-muted px-1.5 py-0.5 rounded text-xs font-mono text-inherit;
-}
-
-.prose-ai pre {
-  @apply bg-muted p-3 rounded-lg overflow-x-auto mb-3;
-}
-
-.prose-ai pre code {
-  @apply bg-transparent p-0;
-}
-
+.prose-ai h1    { @apply text-base; }
+.prose-ai p     { @apply mb-3 last:mb-0; }
+.prose-ai ul,.prose-ai ol { @apply mb-3 pl-4 space-y-1; }
+.prose-ai code  { @apply bg-secondary px-1.5 py-0.5 rounded text-xs font-mono; color: hsl(var(--primary)); }
+.prose-ai pre   { @apply bg-secondary p-3 rounded-xl overflow-x-auto mb-3; }
+.prose-ai pre code { @apply bg-transparent p-0 text-foreground; }
 .prose-ai blockquote {
-  @apply border-l-4 border-accent pl-3 italic mb-3 text-muted-foreground;
+  @apply border-l-4 pl-3 italic mb-3 text-muted-foreground;
+  border-color: hsl(var(--primary)/0.5);
+}
+.prose-ai strong { @apply font-semibold; }
+.prose-ai em     { @apply italic; }
+.prose-ai table  { @apply w-full border-collapse mb-3; }
+.prose-ai th,.prose-ai td { @apply border border-border px-2 py-1 text-xs; }
+.prose-ai th { @apply bg-secondary font-semibold; }
+
+/* ================================================================
+   SHOWCASE / LANDING UTILITIES
+   ================================================================ */
+.gradient-primary {
+  background: linear-gradient(135deg, hsl(43 89% 53%) 0%, hsl(43 89% 62%) 100%);
+}
+.gradient-hero {
+  background: radial-gradient(ellipse 70% 50% at 50% 0%,
+    hsl(43 89% 53% / 0.18) 0%, transparent 65%),
+    hsl(var(--background));
+}
+.glow-primary { box-shadow: 0 0 40px hsl(43 89% 53% / 0.2); }
+.text-gradient {
+  background: linear-gradient(135deg, hsl(43 89% 53%) 0%, hsl(43 89% 65%) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
-.prose-ai strong {
-  @apply font-semibold;
-}
-
-.prose-ai em {
-  @apply italic;
-}
-
-.prose-ai table {
-  @apply w-full border-collapse mb-3;
-}
-
-.prose-ai th,
-.prose-ai td {
-  @apply border border-border px-2 py-1 text-xs;
-}
-
-.prose-ai th {
-  @apply bg-muted font-semibold;
+/* ================================================================
+   AUTH ILLUSTRATION — grid dots
+   ================================================================ */
+.auth-grid-dots {
+  position: absolute; inset: 0;
+  background-image: radial-gradient(hsl(var(--foreground)/0.05) 1px, transparent 1px);
+  background-size: 24px 24px;
+  pointer-events: none;
 }

@@ -57,7 +57,7 @@ export function DropdownMenu({
         <div
           className={`
           absolute ${alignmentClasses[align]} top-full mt-2 w-64 
-          bg-background border border-border rounded-lg shadow-lg z-50
+          bg-card/90 backdrop-blur-xl border border-border/60 rounded-xl shadow-xl z-50
           ${className}
         `}
         >

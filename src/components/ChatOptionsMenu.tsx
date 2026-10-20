@@ -1,4 +1,7 @@
-import { MoreVertical } from "lucide-react";
+import {
+  MoreVertical, Pin, PinOff, Palette, Image, Download,
+  Trash2, Eraser, Users, X,
+} from "lucide-react";
 import Button from "./ui/Button";
 import { DropdownMenu, DropdownMenuItem, DropdownMenuSeparator } from "./ui";
 import { useChatStore } from "../stores/chatStore";
@@ -12,6 +15,7 @@ interface ChatOptionsMenuProps {
   onShowBackgroundModal: () => void;
   onShowDeleteConfirm: () => void;
   onClearChat: () => void;
+  onCloseChat: () => void;
   onShowGroupInfo?: () => void;
 }
 
@@ -22,6 +26,7 @@ export default function ChatOptionsMenu({
   onShowBackgroundModal,
   onShowDeleteConfirm,
   onClearChat,
+  onCloseChat,
   onShowGroupInfo,
 }: ChatOptionsMenuProps) {
   const { toggleConversationPin, messages } = useChatStore();
@@ -30,9 +35,7 @@ export default function ChatOptionsMenu({
     try {
       await api.post(`/chat/conversations/${conversationId}/pin`);
       toggleConversationPin(conversationId);
-      toast.success(
-        `Conversation ${isPinned ? "unpinned" : "pinned"} successfully`
-      );
+      toast.success(`Conversation ${isPinned ? "unpinned" : "pinned"}`);
     } catch {
       toast.error("Failed to update pin");
     }
@@ -60,12 +63,11 @@ export default function ChatOptionsMenu({
     <Button
       type="button"
       variant="ghost"
-      size="sm"
+      size="icon"
       title="More options"
-      className="p-2 md:p-3 rounded-lg"
       tabIndex={0}
     >
-      <MoreVertical className="w-5 h-5 md:w-6 md:h-6 text-muted-foreground" />
+      <MoreVertical className="w-4 h-4 text-muted-foreground" />
     </Button>
   );
 
@@ -74,18 +76,26 @@ export default function ChatOptionsMenu({
       <DropdownMenuSeparator>Chat Management</DropdownMenuSeparator>
 
       {isGroup && onShowGroupInfo && (
-        <DropdownMenuItem onClick={onShowGroupInfo} icon={<span>👥</span>}>
+        <DropdownMenuItem onClick={onShowGroupInfo} icon={<Users className="w-4 h-4" />}>
           Group Info
         </DropdownMenuItem>
       )}
 
-      <DropdownMenuItem onClick={handleTogglePin} icon={<span>📌</span>}>
+      <DropdownMenuItem
+        onClick={handleTogglePin}
+        icon={isPinned
+          ? <PinOff className="w-4 h-4" />
+          : <Pin className="w-4 h-4" />}
+      >
         {isPinned ? "Unpin Conversation" : "Pin Conversation"}
       </DropdownMenuItem>
 
       <DropdownMenuSeparator>Appearance</DropdownMenuSeparator>
 
-      <DropdownMenuItem onClick={onShowBackgroundModal} icon={<span>🎨</span>}>
+      <DropdownMenuItem
+        onClick={onShowBackgroundModal}
+        icon={<Palette className="w-4 h-4" />}
+      >
         Change Background
       </DropdownMenuItem>
 
@@ -93,21 +103,31 @@ export default function ChatOptionsMenu({
 
       <DropdownMenuItem
         onClick={() => window.dispatchEvent(new CustomEvent("open-view-media"))}
-        icon={<span>🖼️</span>}
+        icon={<Image className="w-4 h-4" />}
       >
         View Media & Files
       </DropdownMenuItem>
 
-      <DropdownMenuItem onClick={handleExportChat} icon={<span>📤</span>}>
+      <DropdownMenuItem
+        onClick={handleExportChat}
+        icon={<Download className="w-4 h-4" />}
+      >
         Export Chat
       </DropdownMenuItem>
 
       <DropdownMenuSeparator>Cleanup</DropdownMenuSeparator>
 
       <DropdownMenuItem
+        onClick={onCloseChat}
+        icon={<X className="w-4 h-4" />}
+      >
+        Close Chat
+      </DropdownMenuItem>
+
+      <DropdownMenuItem
         onClick={onClearChat}
         disabled={messages.length === 0}
-        icon={<span>🧹</span>}
+        icon={<Eraser className="w-4 h-4" />}
       >
         Clear Chat
       </DropdownMenuItem>
@@ -115,7 +135,7 @@ export default function ChatOptionsMenu({
       <DropdownMenuItem
         onClick={onShowDeleteConfirm}
         destructive
-        icon={<span>🗑️</span>}
+        icon={<Trash2 className="w-4 h-4" />}
       >
         Delete Conversation
       </DropdownMenuItem>
