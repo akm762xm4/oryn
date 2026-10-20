@@ -7,7 +7,7 @@ import MessageInput from "./MessageInput";
 import MediaModal from "./MediaModal";
 import AboutModal from "./AboutModal";
 import GroupInfoModal from "./GroupInfoModal";
-import { MessageCircle, Bot, Users, Sparkles } from "lucide-react";
+import { MessageCircle, Bot, Users } from "lucide-react";
 
 interface ChatAreaProps {
   showBackButton?: boolean;

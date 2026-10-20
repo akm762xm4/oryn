@@ -8,7 +8,6 @@ import {
   Mail,
   Moon,
   Sun,
-  Sparkles,
   ArrowRight,
   MessageCircle,
   Zap,
